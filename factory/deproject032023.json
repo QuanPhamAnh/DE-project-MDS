@@ -1,0 +1,9 @@
+{
+	"name": "deproject032023",
+	"location": "eastasia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "0411fe3a-6127-4f18-812f-1d1b5a8f98df",
+		"tenantId": "40127cd4-45f3-49a3-b05d-315a43a9f033"
+	}
+}

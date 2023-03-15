@@ -1,0 +1,12 @@
+{
+	"name": "DestinationDataset_lu8",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "de_sql_1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable"
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

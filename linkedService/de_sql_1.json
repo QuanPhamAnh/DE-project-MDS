@@ -1,0 +1,12 @@
+{
+	"name": "de_sql_1",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "integrated security=False;encrypt=True;connection timeout=30;data source=de-project.database.windows.net;initial catalog=de-project;user id=de-project",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDAzQkExN0QwLTYzRDctNDk4MS1BNDBFLUMyQkJGMDNFRUEwNV81Mjk5ZDM3OC1kYmJiLTQzMDItYTdlZi0zZjY5MTY3MmZkNzYiDQp9"
+		}
+	}
+}
