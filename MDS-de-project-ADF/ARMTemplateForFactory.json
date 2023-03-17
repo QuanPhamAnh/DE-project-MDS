@@ -1,0 +1,3389 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "MDS-de-project-ADF"
+		},
+		"AzureBlobStorage_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage'"
+		},
+		"AzureDB_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureDB'"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/MDS-de-project-DataPipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Populate DWH_Customer",
+						"description": "",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 1,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Populate_DWH",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"StagingCustomer": {},
+									"StagingLocation": {},
+									"StagingProduct": {},
+									"StagingStorage": {},
+									"StagingSupplier": {},
+									"StagingWarehouse": {},
+									"StagingExport": {},
+									"StagingImport": {},
+									"DWHCustomer": {},
+									"DWHLocation": {},
+									"DWHProduct": {},
+									"DWHStorage": {},
+									"DWHSupplier": {},
+									"DWHWarehouse": {},
+									"DWHExport": {},
+									"DWHImport": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"runConcurrently": true
+						}
+					},
+					{
+						"name": "Populate DimTable",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "Populate DWH_Customer",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 1,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Populate_DimTable",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"StagingLocation": {},
+									"DWHLocation": {},
+									"StagingWarehouse": {},
+									"DWHWarehouse": {},
+									"StagingProduct": {},
+									"DWHProduct": {},
+									"ExistingDimProduct": {},
+									"DimLocation": {},
+									"DimWarehouse": {},
+									"DimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"runConcurrently": true
+						}
+					},
+					{
+						"name": "Populate FactTable",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "Populate DimTable",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 1,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Populate_FactTable",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"DimLocation": {},
+									"DimWarehouse": {},
+									"DimProduct": {},
+									"DWHSupplier": {},
+									"DWHWarehouse": {},
+									"StagingImport": {},
+									"DWHImport": {},
+									"StagingExport": {},
+									"DWHExport": {},
+									"DWHStorage": {},
+									"FactImport": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"runConcurrently": true
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-03-17T08:04:05Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/Populate_DWH')]",
+				"[concat(variables('factoryId'), '/dataflows/Populate_DimTable')]",
+				"[concat(variables('factoryId'), '/dataflows/Populate_FactTable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_Customer')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Customer_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Source_Customer_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Username",
+						"type": "varchar"
+					},
+					{
+						"name": "Sex",
+						"type": "varchar"
+					},
+					{
+						"name": "Mail",
+						"type": "varchar"
+					},
+					{
+						"name": "Birthdate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "Location_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Phone",
+						"type": "varchar"
+					},
+					{
+						"name": "uuid",
+						"type": "varchar"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "DWH",
+					"table": "Customer"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_Export')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Order_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Source_Order_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Product_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Customer_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Quantity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Date_Order",
+						"type": "date"
+					},
+					{
+						"name": "Date_Ship",
+						"type": "date"
+					},
+					{
+						"name": "Date_due",
+						"type": "date"
+					},
+					{
+						"name": "Ship_Distance",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Ship_Cost",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "uuid",
+						"type": "varchar"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "DWH",
+					"table": "Export"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_Import')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ImportID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Source_Import_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Product_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Warehouse_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Supplier_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Quantity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Ship_Distance",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Ship_Cost",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Import_Date",
+						"type": "date"
+					},
+					{
+						"name": "uuid",
+						"type": "varchar"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "DWH",
+					"table": "Import"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_Location')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Location_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Source_Location_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Address",
+						"type": "varchar"
+					},
+					{
+						"name": "Lat",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Long",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "City",
+						"type": "varchar"
+					},
+					{
+						"name": "Country_code",
+						"type": "varchar"
+					},
+					{
+						"name": "Country_name",
+						"type": "varchar"
+					},
+					{
+						"name": "States",
+						"type": "varchar"
+					},
+					{
+						"name": "uuid",
+						"type": "varchar"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "DWH",
+					"table": "Location"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_Product')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Product_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Source_Product_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Product_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Product_Category",
+						"type": "varchar"
+					},
+					{
+						"name": "Product_Code",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Weight",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "uuid",
+						"type": "varchar"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "DWH",
+					"table": "Product"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_Storage')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "StorageID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Source_StorageID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Product_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Warehouse_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Capacity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Quantity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "uuid",
+						"type": "varchar"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "DWH",
+					"table": "Storage"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_Supplier')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Supplier_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Source_Supplier_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Supplier_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Location_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "uuid",
+						"type": "varchar"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "DWH",
+					"table": "Supplier"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_Warehouse')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Warehouse_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Source_Warehouse_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Warehouse_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Warehouse_cost",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Location_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "uuid",
+						"type": "varchar"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "DWH",
+					"table": "Warehouse"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Model_Dim_Date')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DataModel"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "DateKey",
+						"type": "date"
+					},
+					{
+						"name": "TheDay",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TheDaySuffix",
+						"type": "char"
+					},
+					{
+						"name": "TheDayName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "TheDayOfWeek",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TheDayOfWeekInMonth",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "TheDayOfYear",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "IsWeekend",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TheWeek",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TheISOweek",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TheFirstOfWeek",
+						"type": "date"
+					},
+					{
+						"name": "TheLastOfWeek",
+						"type": "date"
+					},
+					{
+						"name": "TheWeekOfMonth",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "TheMonth",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TheMonthName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "TheFirstOfMonth",
+						"type": "date"
+					},
+					{
+						"name": "TheLastOfMonth",
+						"type": "date"
+					},
+					{
+						"name": "TheFirstOfNextMonth",
+						"type": "date"
+					},
+					{
+						"name": "TheLastOfNextMonth",
+						"type": "date"
+					},
+					{
+						"name": "TheQuarter",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TheFirstOfQuarter",
+						"type": "date"
+					},
+					{
+						"name": "TheLastOfQuarter",
+						"type": "date"
+					},
+					{
+						"name": "TheYear",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TheISOYear",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TheFirstOfYear",
+						"type": "date"
+					},
+					{
+						"name": "TheLastOfYear",
+						"type": "date"
+					},
+					{
+						"name": "IsLeapYear",
+						"type": "bit"
+					},
+					{
+						"name": "Has53Weeks",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Has53ISOWeeks",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "MMYYYY",
+						"type": "char"
+					}
+				],
+				"typeProperties": {
+					"schema": "Model",
+					"table": "DimDate"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Model_Dim_Location')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DataModel"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "LocationKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Location_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Lat",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Long",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Address",
+						"type": "varchar"
+					},
+					{
+						"name": "City",
+						"type": "varchar"
+					},
+					{
+						"name": "Country_code",
+						"type": "varchar"
+					},
+					{
+						"name": "Country_name",
+						"type": "varchar"
+					},
+					{
+						"name": "States",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "Model",
+					"table": "DimLocation"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Model_Dim_Product')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DataModel"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ProductKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Product_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Product_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Product_Category",
+						"type": "varchar"
+					},
+					{
+						"name": "Product_Code",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Weight",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Currently",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "StartDate",
+						"type": "date"
+					},
+					{
+						"name": "EndDate",
+						"type": "date"
+					}
+				],
+				"typeProperties": {
+					"schema": "Model",
+					"table": "DimProduct"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Model_Dim_Warehouse')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DataModel"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "WarehouseKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Warehouse_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Warehouse_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Warehouse_Cost",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Lat",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Long",
+						"type": "float",
+						"precision": 15
+					}
+				],
+				"typeProperties": {
+					"schema": "Model",
+					"table": "DimWarehouse"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Model_Fact_Export')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DataModel"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ExportKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ExportDate",
+						"type": "date"
+					},
+					{
+						"name": "DepartureLocationKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ArrivalLocationKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "WarehouseKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProductKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ShipLate",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Quantity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TotalWeight",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "ShipDistance",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "ShipCost",
+						"type": "float",
+						"precision": 15
+					}
+				],
+				"typeProperties": {
+					"schema": "Model",
+					"table": "FactExport"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Model_Fact_Import')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DataModel"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ImportKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ImportDate",
+						"type": "date"
+					},
+					{
+						"name": "DepartureLocationKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ArrivalLocationKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "WarehouseKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProductKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Quantity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TotalWeight",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "ShipDistance",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "ShipCost",
+						"type": "float",
+						"precision": 15
+					}
+				],
+				"typeProperties": {
+					"schema": "Model",
+					"table": "FactImport"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Staging_Customer')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Staging"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Customer_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "name",
+						"type": "varchar"
+					},
+					{
+						"name": "username",
+						"type": "varchar"
+					},
+					{
+						"name": "sex",
+						"type": "varchar"
+					},
+					{
+						"name": "mail",
+						"type": "varchar"
+					},
+					{
+						"name": "birthdate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "Location_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Phone",
+						"type": "varchar"
+					},
+					{
+						"name": "uuid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "Staging",
+					"table": "Customer"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Staging_Export')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Staging"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Order_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Product_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Customer_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Quantity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Date_Order",
+						"type": "date"
+					},
+					{
+						"name": "Date_Ship",
+						"type": "date"
+					},
+					{
+						"name": "Date_due",
+						"type": "date"
+					},
+					{
+						"name": "Ship_Distance",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Ship_Cost",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "uuid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "Staging",
+					"table": "Export"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Staging_Import')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Staging"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Import_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Product_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Warehouse_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Supplier_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Quantity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Ship_Distance",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Ship_Cost",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Import_Date",
+						"type": "date"
+					},
+					{
+						"name": "uuid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "Staging",
+					"table": "Import"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Staging_Location')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Staging"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Location_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Address",
+						"type": "varchar"
+					},
+					{
+						"name": "Lat",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Long",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "City",
+						"type": "varchar"
+					},
+					{
+						"name": "Country_code",
+						"type": "varchar"
+					},
+					{
+						"name": "Country_name",
+						"type": "varchar"
+					},
+					{
+						"name": "States",
+						"type": "varchar"
+					},
+					{
+						"name": "uuid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "Staging",
+					"table": "Location"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Staging_Product')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Staging"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Product_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Product_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Product_Category",
+						"type": "varchar"
+					},
+					{
+						"name": "Product_Code",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Weight",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "uuid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "Staging",
+					"table": "Product"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Staging_Storage')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Staging"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "StorageID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Product_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Warehouse_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Capacity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Quantity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "uuid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "Staging",
+					"table": "Storage"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Staging_Supplier')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Staging"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Supplier_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Supplier_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Location_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "uuid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "Staging",
+					"table": "Supplier"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Staging_Warehouse')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDB",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Staging"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Warehouse_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Warehouse_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Warehouse_cost",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "Location_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "uuid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "LastEditedBy",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastEditedWhen",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "Staging",
+					"table": "Warehouse"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureBlobStorage_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDB')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureDB_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Populate_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Staging_Customer",
+								"type": "DatasetReference"
+							},
+							"name": "StagingCustomer"
+						},
+						{
+							"dataset": {
+								"referenceName": "Staging_Location",
+								"type": "DatasetReference"
+							},
+							"name": "StagingLocation"
+						},
+						{
+							"dataset": {
+								"referenceName": "Staging_Product",
+								"type": "DatasetReference"
+							},
+							"name": "StagingProduct"
+						},
+						{
+							"dataset": {
+								"referenceName": "Staging_Storage",
+								"type": "DatasetReference"
+							},
+							"name": "StagingStorage"
+						},
+						{
+							"dataset": {
+								"referenceName": "Staging_Supplier",
+								"type": "DatasetReference"
+							},
+							"name": "StagingSupplier"
+						},
+						{
+							"dataset": {
+								"referenceName": "Staging_Warehouse",
+								"type": "DatasetReference"
+							},
+							"name": "StagingWarehouse"
+						},
+						{
+							"dataset": {
+								"referenceName": "Staging_Export",
+								"type": "DatasetReference"
+							},
+							"name": "StagingExport"
+						},
+						{
+							"dataset": {
+								"referenceName": "Staging_Import",
+								"type": "DatasetReference"
+							},
+							"name": "StagingImport"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DWH_Customer",
+								"type": "DatasetReference"
+							},
+							"name": "DWHCustomer"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Location",
+								"type": "DatasetReference"
+							},
+							"name": "DWHLocation"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Product",
+								"type": "DatasetReference"
+							},
+							"name": "DWHProduct"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Storage",
+								"type": "DatasetReference"
+							},
+							"name": "DWHStorage"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Supplier",
+								"type": "DatasetReference"
+							},
+							"name": "DWHSupplier"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Warehouse",
+								"type": "DatasetReference"
+							},
+							"name": "DWHWarehouse"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Export",
+								"type": "DatasetReference"
+							},
+							"name": "DWHExport"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Import",
+								"type": "DatasetReference"
+							},
+							"name": "DWHImport"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AlterCustomer",
+							"description": "Enable Upsert"
+						},
+						{
+							"name": "AlterLocation",
+							"description": "Enable Upsert"
+						},
+						{
+							"name": "AlterProduct",
+							"description": "Enable Upsert"
+						},
+						{
+							"name": "AlterStorage",
+							"description": "Enable Upsert"
+						},
+						{
+							"name": "AlterSupplier",
+							"description": "Enable Upsert"
+						},
+						{
+							"name": "AlterWarehouse",
+							"description": "Enable Upsert"
+						},
+						{
+							"name": "AlterExport",
+							"description": "Enable Export"
+						},
+						{
+							"name": "AlterImport"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Customer_ID as integer,",
+						"          name as string,",
+						"          username as string,",
+						"          sex as string,",
+						"          mail as string,",
+						"          birthdate as timestamp,",
+						"          Location_ID as integer,",
+						"          Phone as string,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingCustomer",
+						"source(output(",
+						"          Location_ID as integer,",
+						"          Address as string,",
+						"          Lat as double,",
+						"          Long as double,",
+						"          City as string,",
+						"          Country_code as string,",
+						"          Country_name as string,",
+						"          States as string,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingLocation",
+						"source(output(",
+						"          Product_ID as integer,",
+						"          Product_Name as string,",
+						"          Product_Category as string,",
+						"          Product_Code as integer,",
+						"          Weight as double,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingProduct",
+						"source(output(",
+						"          StorageID as integer,",
+						"          Product_ID as integer,",
+						"          Warehouse_ID as integer,",
+						"          Capacity as integer,",
+						"          Quantity as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingStorage",
+						"source(output(",
+						"          Supplier_ID as integer,",
+						"          Supplier_Name as string,",
+						"          Location_ID as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingSupplier",
+						"source(output(",
+						"          Warehouse_ID as integer,",
+						"          Warehouse_Name as string,",
+						"          Warehouse_cost as double,",
+						"          Location_ID as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingWarehouse",
+						"source(output(",
+						"          Order_ID as integer,",
+						"          Product_ID as integer,",
+						"          Customer_ID as integer,",
+						"          Quantity as integer,",
+						"          Date_Order as date,",
+						"          Date_Ship as date,",
+						"          Date_due as date,",
+						"          Ship_Distance as double,",
+						"          Ship_Cost as double,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingExport",
+						"source(output(",
+						"          Import_ID as integer,",
+						"          Product_ID as integer,",
+						"          Warehouse_ID as integer,",
+						"          Supplier_ID as integer,",
+						"          Quantity as integer,",
+						"          Ship_Distance as double,",
+						"          Ship_Cost as double,",
+						"          Import_Date as date,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingImport",
+						"StagingCustomer alterRow(upsertIf(true())) ~> AlterCustomer",
+						"StagingLocation alterRow(upsertIf(true())) ~> AlterLocation",
+						"StagingProduct alterRow(upsertIf(true())) ~> AlterProduct",
+						"StagingStorage alterRow(upsertIf(true())) ~> AlterStorage",
+						"StagingSupplier alterRow(upsertIf(true())) ~> AlterSupplier",
+						"StagingWarehouse alterRow(upsertIf(true())) ~> AlterWarehouse",
+						"StagingExport alterRow(upsertIf(true())) ~> AlterExport",
+						"StagingImport alterRow(upsertIf(true())) ~> AlterImport",
+						"AlterCustomer sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Customer_ID as integer,",
+						"          Source_Customer_ID as integer,",
+						"          Name as string,",
+						"          Username as string,",
+						"          Sex as string,",
+						"          Mail as string,",
+						"          Birthdate as timestamp,",
+						"          Location_ID as integer,",
+						"          Phone as string,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['Source_Customer_ID'],",
+						"     format: 'table',",
+						"     dateFormat:'dd/MM/yyyy',",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     outputAssertFailedRows: true,",
+						"     mapColumn(",
+						"          Source_Customer_ID = Customer_ID,",
+						"          Name = name,",
+						"          Username = username,",
+						"          Sex = sex,",
+						"          Mail = mail,",
+						"          Birthdate = birthdate,",
+						"          Location_ID,",
+						"          Phone,",
+						"          uuid,",
+						"          LastEditedBy,",
+						"          LastEditedWhen",
+						"     )) ~> DWHCustomer",
+						"AlterLocation sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Location_ID as integer,",
+						"          Source_Location_ID as integer,",
+						"          Address as string,",
+						"          Lat as double,",
+						"          Long as double,",
+						"          City as string,",
+						"          Country_code as string,",
+						"          Country_name as string,",
+						"          States as string,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['Source_Location_ID'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Source_Location_ID = Location_ID,",
+						"          Address,",
+						"          Lat,",
+						"          Long,",
+						"          City,",
+						"          Country_code,",
+						"          Country_name,",
+						"          States,",
+						"          uuid,",
+						"          LastEditedBy,",
+						"          LastEditedWhen",
+						"     )) ~> DWHLocation",
+						"AlterProduct sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Product_ID as integer,",
+						"          Source_Product_ID as integer,",
+						"          Product_Name as string,",
+						"          Product_Category as string,",
+						"          Product_Code as integer,",
+						"          Weight as double,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['Source_Product_ID'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Source_Product_ID = Product_ID,",
+						"          Product_Name,",
+						"          Product_Category,",
+						"          Product_Code,",
+						"          Weight,",
+						"          uuid,",
+						"          LastEditedBy,",
+						"          LastEditedWhen",
+						"     )) ~> DWHProduct",
+						"AlterStorage sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          StorageID as integer,",
+						"          Source_StorageID as integer,",
+						"          Product_ID as integer,",
+						"          Warehouse_ID as integer,",
+						"          Capacity as integer,",
+						"          Quantity as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['Source_StorageID'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Source_StorageID = StorageID,",
+						"          Product_ID,",
+						"          Warehouse_ID,",
+						"          Capacity,",
+						"          Quantity,",
+						"          uuid,",
+						"          LastEditedBy,",
+						"          LastEditedWhen",
+						"     )) ~> DWHStorage",
+						"AlterSupplier sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Supplier_ID as integer,",
+						"          Source_Supplier_ID as integer,",
+						"          Supplier_Name as string,",
+						"          Location_ID as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['Source_Supplier_ID'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Source_Supplier_ID = Supplier_ID,",
+						"          Supplier_Name,",
+						"          Location_ID,",
+						"          uuid,",
+						"          LastEditedBy,",
+						"          LastEditedWhen",
+						"     )) ~> DWHSupplier",
+						"AlterWarehouse sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Warehouse_ID as integer,",
+						"          Source_Warehouse_ID as integer,",
+						"          Warehouse_Name as string,",
+						"          Warehouse_cost as double,",
+						"          Location_ID as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['Source_Warehouse_ID'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Source_Warehouse_ID = Warehouse_ID,",
+						"          Warehouse_Name,",
+						"          Warehouse_cost,",
+						"          Location_ID,",
+						"          uuid,",
+						"          LastEditedBy,",
+						"          LastEditedWhen",
+						"     )) ~> DWHWarehouse",
+						"AlterExport sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Order_ID as integer,",
+						"          Source_Order_ID as integer,",
+						"          Product_ID as integer,",
+						"          Customer_ID as integer,",
+						"          Quantity as integer,",
+						"          Date_Order as date,",
+						"          Date_Ship as date,",
+						"          Date_due as date,",
+						"          Ship_Distance as double,",
+						"          Ship_Cost as double,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['Source_Order_ID'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Source_Order_ID = Order_ID,",
+						"          Product_ID,",
+						"          Customer_ID,",
+						"          Quantity,",
+						"          Date_Order,",
+						"          Date_Ship,",
+						"          Date_due,",
+						"          Ship_Distance,",
+						"          Ship_Cost,",
+						"          uuid,",
+						"          LastEditedBy,",
+						"          LastEditedWhen",
+						"     )) ~> DWHExport",
+						"AlterImport sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ImportID as integer,",
+						"          Source_Import_ID as integer,",
+						"          Product_ID as integer,",
+						"          Warehouse_ID as integer,",
+						"          Supplier_ID as integer,",
+						"          Quantity as integer,",
+						"          Ship_Distance as double,",
+						"          Ship_Cost as double,",
+						"          Import_Date as date,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['Source_Import_ID'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Source_Import_ID = Import_ID,",
+						"          Product_ID,",
+						"          Warehouse_ID,",
+						"          Supplier_ID,",
+						"          Quantity,",
+						"          Ship_Distance,",
+						"          Ship_Cost,",
+						"          Import_Date,",
+						"          uuid,",
+						"          LastEditedBy,",
+						"          LastEditedWhen",
+						"     )) ~> DWHImport"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Staging_Customer')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Location')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Product')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Storage')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Supplier')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Warehouse')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Export')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Import')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Customer')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Location')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Product')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Storage')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Supplier')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Warehouse')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Export')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Import')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Populate_DimTable')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Staging_Location",
+								"type": "DatasetReference"
+							},
+							"name": "StagingLocation"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Location",
+								"type": "DatasetReference"
+							},
+							"name": "DWHLocation"
+						},
+						{
+							"dataset": {
+								"referenceName": "Staging_Warehouse",
+								"type": "DatasetReference"
+							},
+							"name": "StagingWarehouse"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Warehouse",
+								"type": "DatasetReference"
+							},
+							"name": "DWHWarehouse"
+						},
+						{
+							"dataset": {
+								"referenceName": "Staging_Product",
+								"type": "DatasetReference"
+							},
+							"name": "StagingProduct"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Product",
+								"type": "DatasetReference"
+							},
+							"name": "DWHProduct"
+						},
+						{
+							"dataset": {
+								"referenceName": "Model_Dim_Product",
+								"type": "DatasetReference"
+							},
+							"name": "ExistingDimProduct"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Model_Dim_Location",
+								"type": "DatasetReference"
+							},
+							"name": "DimLocation"
+						},
+						{
+							"dataset": {
+								"referenceName": "Model_Dim_Warehouse",
+								"type": "DatasetReference"
+							},
+							"name": "DimWarehouse"
+						},
+						{
+							"dataset": {
+								"referenceName": "Model_Dim_Product",
+								"type": "DatasetReference"
+							},
+							"name": "DimProduct"
+						}
+					],
+					"transformations": [
+						{
+							"name": "JoinLocation",
+							"description": "Inner join on 'StagingLocation' and 'DWHLocation'"
+						},
+						{
+							"name": "SelectColLocation"
+						},
+						{
+							"name": "AlterDimLocation",
+							"description": "Enable Upsert"
+						},
+						{
+							"name": "JoinWarehouse"
+						},
+						{
+							"name": "JoinLocationWarehouse"
+						},
+						{
+							"name": "SelectColWarehouse"
+						},
+						{
+							"name": "AlterDimWarehouse",
+							"description": "Enable Upsert"
+						},
+						{
+							"name": "JoinProduct"
+						},
+						{
+							"name": "SelectColProduct"
+						},
+						{
+							"name": "FilterCurrently"
+						},
+						{
+							"name": "FilterForUpdate"
+						},
+						{
+							"name": "AddHashExisting"
+						},
+						{
+							"name": "AddNewHash"
+						},
+						{
+							"name": "UpdateExisting"
+						},
+						{
+							"name": "MarkAsUpdate",
+							"description": "Enable Update"
+						},
+						{
+							"name": "DropUnwanted"
+						},
+						{
+							"name": "NewAndUpdate"
+						},
+						{
+							"name": "AddKey"
+						},
+						{
+							"name": "MaxKey"
+						},
+						{
+							"name": "JoinMaxKey"
+						},
+						{
+							"name": "AddDimCol"
+						},
+						{
+							"name": "DropUnwantedCol"
+						},
+						{
+							"name": "MarkAsInsert",
+							"description": "Enable Insert"
+						},
+						{
+							"name": "UnionAll"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Location_ID as integer,",
+						"          Address as string,",
+						"          Lat as double,",
+						"          Long as double,",
+						"          City as string,",
+						"          Country_code as string,",
+						"          Country_name as string,",
+						"          States as string,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingLocation",
+						"source(output(",
+						"          Location_ID as integer,",
+						"          Source_Location_ID as integer,",
+						"          Address as string,",
+						"          Lat as double,",
+						"          Long as double,",
+						"          City as string,",
+						"          Country_code as string,",
+						"          Country_name as string,",
+						"          States as string,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DWHLocation",
+						"source(output(",
+						"          Warehouse_ID as integer,",
+						"          Warehouse_Name as string,",
+						"          Warehouse_cost as double,",
+						"          Location_ID as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingWarehouse",
+						"source(output(",
+						"          Warehouse_ID as integer,",
+						"          Source_Warehouse_ID as integer,",
+						"          Warehouse_Name as string,",
+						"          Warehouse_cost as double,",
+						"          Location_ID as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DWHWarehouse",
+						"source(output(",
+						"          Product_ID as integer,",
+						"          Product_Name as string,",
+						"          Product_Category as string,",
+						"          Product_Code as integer,",
+						"          Weight as double,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingProduct",
+						"source(output(",
+						"          Product_ID as integer,",
+						"          Source_Product_ID as integer,",
+						"          Product_Name as string,",
+						"          Product_Category as string,",
+						"          Product_Code as integer,",
+						"          Weight as double,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DWHProduct",
+						"source(output(",
+						"          ProductKey as integer,",
+						"          Product_ID as integer,",
+						"          Product_Name as string,",
+						"          Product_Category as string,",
+						"          Product_Code as integer,",
+						"          Weight as double,",
+						"          Currently as integer,",
+						"          StartDate as date,",
+						"          EndDate as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> ExistingDimProduct",
+						"StagingLocation, DWHLocation join(StagingLocation@Location_ID == Source_Location_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinLocation",
+						"JoinLocation select(mapColumn(",
+						"          Location_ID = DWHLocation@Location_ID,",
+						"          Address = DWHLocation@Address,",
+						"          Lat = DWHLocation@Lat,",
+						"          Long = DWHLocation@Long,",
+						"          City = DWHLocation@City,",
+						"          Country_code = DWHLocation@Country_code,",
+						"          Country_name = DWHLocation@Country_name,",
+						"          States = DWHLocation@States",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectColLocation",
+						"SelectColLocation alterRow(upsertIf(true())) ~> AlterDimLocation",
+						"StagingWarehouse, DWHWarehouse join(StagingWarehouse@Warehouse_ID == Source_Warehouse_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinWarehouse",
+						"JoinWarehouse, DWHLocation join(DWHWarehouse@Location_ID == DWHLocation@Location_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinLocationWarehouse",
+						"JoinLocationWarehouse select(mapColumn(",
+						"          Warehouse_ID = DWHWarehouse@Warehouse_ID,",
+						"          Warehouse_Name = DWHWarehouse@Warehouse_Name,",
+						"          Warehouse_cost = DWHWarehouse@Warehouse_cost,",
+						"          Lat,",
+						"          Long",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectColWarehouse",
+						"SelectColWarehouse alterRow(updateIf(true())) ~> AlterDimWarehouse",
+						"StagingProduct, DWHProduct join(StagingProduct@Product_ID == Source_Product_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinProduct",
+						"JoinProduct select(mapColumn(",
+						"          Product_ID = DWHProduct@Product_ID,",
+						"          Product_Name = DWHProduct@Product_Name,",
+						"          Product_Category = DWHProduct@Product_Category,",
+						"          Product_Code = DWHProduct@Product_Code,",
+						"          Weight = DWHProduct@Weight",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectColProduct",
+						"ExistingDimProduct filter(Currently == 1) ~> FilterCurrently",
+						"AddHashExisting, AddNewHash exists(AddHashExisting@Hash == AddNewHash@Hash,",
+						"     negate:false,",
+						"     broadcast: 'auto')~> FilterForUpdate",
+						"FilterCurrently derive(Hash = md5(Product_ID,Product_Name,Product_Category,Product_Code,Weight)) ~> AddHashExisting",
+						"SelectColProduct derive(Hash = md5(Product_ID,Product_Name,Product_Category,Product_Code,Weight)) ~> AddNewHash",
+						"FilterForUpdate derive(Currently = 0,",
+						"          EndDate = currentDate()) ~> UpdateExisting",
+						"UpdateExisting alterRow(updateIf(true())) ~> MarkAsUpdate",
+						"MarkAsUpdate select(mapColumn(",
+						"          ProductKey,",
+						"          Product_ID,",
+						"          Product_Name,",
+						"          Product_Category,",
+						"          Product_Code,",
+						"          Weight,",
+						"          Currently,",
+						"          StartDate,",
+						"          EndDate",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> DropUnwanted",
+						"AddNewHash, AddHashExisting exists(AddNewHash@Hash == AddHashExisting@Hash,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> NewAndUpdate",
+						"NewAndUpdate keyGenerate(output(ProductKey as long),",
+						"     startAt: 1L,",
+						"     stepValue: 1L) ~> AddKey",
+						"AddHashExisting aggregate(MaxProductKey = max(toInteger(byName('ProductKey')))) ~> MaxKey",
+						"AddKey, MaxKey join(ProductKey == MaxProductKey || true(),",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinMaxKey",
+						"JoinMaxKey derive(Currently = 1,",
+						"          ProductKey = toInteger(ProductKey+MaxProductKey),",
+						"          StartDate = currentDate(),",
+						"          EndDate = toDate(toString(null()))) ~> AddDimCol",
+						"AddDimCol select(mapColumn(",
+						"          Product_ID,",
+						"          Product_Name,",
+						"          Product_Category,",
+						"          Product_Code,",
+						"          Weight,",
+						"          ProductKey,",
+						"          Currently,",
+						"          StartDate,",
+						"          EndDate",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> DropUnwantedCol",
+						"DropUnwantedCol alterRow(insertIf(true())) ~> MarkAsInsert",
+						"MarkAsInsert, DropUnwanted union(byName: true)~> UnionAll",
+						"AlterDimLocation sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          LocationKey as integer,",
+						"          Location_ID as integer,",
+						"          Lat as double,",
+						"          Long as double,",
+						"          Address as string,",
+						"          City as string,",
+						"          Country_code as string,",
+						"          Country_name as string,",
+						"          States as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['Location_ID'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Location_ID,",
+						"          Lat,",
+						"          Long,",
+						"          Address,",
+						"          City,",
+						"          Country_code,",
+						"          Country_name,",
+						"          States",
+						"     )) ~> DimLocation",
+						"AlterDimWarehouse sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          WarehouseKey as integer,",
+						"          Warehouse_ID as integer,",
+						"          Warehouse_Name as string,",
+						"          Warehouse_Cost as double,",
+						"          Lat as double,",
+						"          Long as double",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['Warehouse_ID'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Warehouse_ID,",
+						"          Warehouse_Name,",
+						"          Warehouse_Cost = Warehouse_cost,",
+						"          Lat,",
+						"          Long",
+						"     )) ~> DimWarehouse",
+						"UnionAll sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ProductKey as integer,",
+						"          Product_ID as integer,",
+						"          Product_Name as string,",
+						"          Product_Category as string,",
+						"          Product_Code as integer,",
+						"          Weight as double,",
+						"          Currently as integer,",
+						"          StartDate as date,",
+						"          EndDate as date",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          ProductKey,",
+						"          Product_ID,",
+						"          Product_Name,",
+						"          Product_Category,",
+						"          Product_Code,",
+						"          Weight,",
+						"          Currently,",
+						"          StartDate,",
+						"          EndDate",
+						"     )) ~> DimProduct"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Staging_Location')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Location')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Warehouse')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Warehouse')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Product')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Product')]",
+				"[concat(variables('factoryId'), '/datasets/Model_Dim_Product')]",
+				"[concat(variables('factoryId'), '/datasets/Model_Dim_Location')]",
+				"[concat(variables('factoryId'), '/datasets/Model_Dim_Warehouse')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Populate_FactTable')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Model_Dim_Location",
+								"type": "DatasetReference"
+							},
+							"name": "DimLocation"
+						},
+						{
+							"dataset": {
+								"referenceName": "Model_Dim_Warehouse",
+								"type": "DatasetReference"
+							},
+							"name": "DimWarehouse"
+						},
+						{
+							"dataset": {
+								"referenceName": "Model_Dim_Product",
+								"type": "DatasetReference"
+							},
+							"name": "DimProduct"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Supplier",
+								"type": "DatasetReference"
+							},
+							"name": "DWHSupplier"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Warehouse",
+								"type": "DatasetReference"
+							},
+							"name": "DWHWarehouse"
+						},
+						{
+							"dataset": {
+								"referenceName": "Staging_Import",
+								"type": "DatasetReference"
+							},
+							"name": "StagingImport"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Import",
+								"type": "DatasetReference"
+							},
+							"name": "DWHImport"
+						},
+						{
+							"dataset": {
+								"referenceName": "Staging_Export",
+								"type": "DatasetReference"
+							},
+							"name": "StagingExport"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Export",
+								"type": "DatasetReference"
+							},
+							"name": "DWHExport"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Storage",
+								"type": "DatasetReference"
+							},
+							"name": "DWHStorage"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Model_Fact_Import",
+								"type": "DatasetReference"
+							},
+							"name": "FactImport"
+						}
+					],
+					"transformations": [
+						{
+							"name": "JoinImport"
+						},
+						{
+							"name": "JoinDWH"
+						},
+						{
+							"name": "SelectImport"
+						},
+						{
+							"name": "SelectDWHWarehouse"
+						},
+						{
+							"name": "SelectSupplier"
+						},
+						{
+							"name": "SelectProduct"
+						},
+						{
+							"name": "SelectWarehouse"
+						},
+						{
+							"name": "SelectLocation"
+						},
+						{
+							"name": "JoinSupplier"
+						},
+						{
+							"name": "JoinDimWH"
+						},
+						{
+							"name": "JoinDeptLocation"
+						},
+						{
+							"name": "SelectTemp1"
+						},
+						{
+							"name": "JoinArrLocation"
+						},
+						{
+							"name": "JoinProduct"
+						},
+						{
+							"name": "ReplaceNull"
+						},
+						{
+							"name": "DropUnwantedCol"
+						},
+						{
+							"name": "CalTotalWeight"
+						},
+						{
+							"name": "SelectExport"
+						},
+						{
+							"name": "JoinExport"
+						},
+						{
+							"name": "SelectStorage"
+						},
+						{
+							"name": "JoinStorage"
+						},
+						{
+							"name": "JoinDWH1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          LocationKey as integer,",
+						"          Location_ID as integer,",
+						"          Lat as double,",
+						"          Long as double,",
+						"          Address as string,",
+						"          City as string,",
+						"          Country_code as string,",
+						"          Country_name as string,",
+						"          States as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DimLocation",
+						"source(output(",
+						"          WarehouseKey as integer,",
+						"          Warehouse_ID as integer,",
+						"          Warehouse_Name as string,",
+						"          Warehouse_Cost as double,",
+						"          Lat as double,",
+						"          Long as double",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DimWarehouse",
+						"source(output(",
+						"          ProductKey as integer,",
+						"          Product_ID as integer,",
+						"          Product_Name as string,",
+						"          Product_Category as string,",
+						"          Product_Code as integer,",
+						"          Weight as double,",
+						"          Currently as integer,",
+						"          StartDate as date,",
+						"          EndDate as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DimProduct",
+						"source(output(",
+						"          Supplier_ID as integer,",
+						"          Source_Supplier_ID as integer,",
+						"          Supplier_Name as string,",
+						"          Location_ID as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DWHSupplier",
+						"source(output(",
+						"          Warehouse_ID as integer,",
+						"          Source_Warehouse_ID as integer,",
+						"          Warehouse_Name as string,",
+						"          Warehouse_cost as double,",
+						"          Location_ID as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DWHWarehouse",
+						"source(output(",
+						"          Import_ID as integer,",
+						"          Product_ID as integer,",
+						"          Warehouse_ID as integer,",
+						"          Supplier_ID as integer,",
+						"          Quantity as integer,",
+						"          Ship_Distance as double,",
+						"          Ship_Cost as double,",
+						"          Import_Date as date,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingImport",
+						"source(output(",
+						"          ImportID as integer,",
+						"          Source_Import_ID as integer,",
+						"          Product_ID as integer,",
+						"          Warehouse_ID as integer,",
+						"          Supplier_ID as integer,",
+						"          Quantity as integer,",
+						"          Ship_Distance as double,",
+						"          Ship_Cost as double,",
+						"          Import_Date as date,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DWHImport",
+						"source(output(",
+						"          Order_ID as integer,",
+						"          Product_ID as integer,",
+						"          Customer_ID as integer,",
+						"          Quantity as integer,",
+						"          Date_Order as date,",
+						"          Date_Ship as date,",
+						"          Date_due as date,",
+						"          Ship_Distance as double,",
+						"          Ship_Cost as double,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingExport",
+						"source(output(",
+						"          Order_ID as integer,",
+						"          Source_Order_ID as integer,",
+						"          Product_ID as integer,",
+						"          Customer_ID as integer,",
+						"          Quantity as integer,",
+						"          Date_Order as date,",
+						"          Date_Ship as date,",
+						"          Date_due as date,",
+						"          Ship_Distance as double,",
+						"          Ship_Cost as double,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DWHExport",
+						"source(output(",
+						"          StorageID as integer,",
+						"          Source_StorageID as integer,",
+						"          Product_ID as integer,",
+						"          Warehouse_ID as integer,",
+						"          Capacity as integer,",
+						"          Quantity as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DWHStorage",
+						"SelectImport, DWHImport join(Import_ID == Source_Import_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinImport",
+						"JoinImport, SelectDWHWarehouse join(DWHImport@Warehouse_ID == SelectDWHWarehouse@Warehouse_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinDWH",
+						"StagingImport select(mapColumn(",
+						"          Import_ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectImport",
+						"DWHWarehouse select(mapColumn(",
+						"          Warehouse_ID,",
+						"          Arrival_Location_ID = Location_ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectDWHWarehouse",
+						"DWHSupplier select(mapColumn(",
+						"          Supplier_ID,",
+						"          Departure_Location_ID = Location_ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectSupplier",
+						"DimProduct select(mapColumn(",
+						"          ProductKey,",
+						"          Product_ID,",
+						"          StartDate,",
+						"          EndDate,",
+						"          Weight",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectProduct",
+						"DimWarehouse select(mapColumn(",
+						"          WarehouseKey,",
+						"          Warehouse_ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectWarehouse",
+						"DimLocation select(mapColumn(",
+						"          LocationKey,",
+						"          Location_ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectLocation",
+						"JoinDWH, SelectSupplier join(DWHImport@Supplier_ID == SelectSupplier@Supplier_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinSupplier",
+						"JoinSupplier, SelectWarehouse join(DWHImport@Warehouse_ID == SelectWarehouse@Warehouse_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinDimWH",
+						"JoinDimWH, SelectLocation join(Arrival_Location_ID == Location_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinDeptLocation",
+						"JoinDeptLocation select(mapColumn(",
+						"          Product_ID,",
+						"          Quantity,",
+						"          Ship_Distance,",
+						"          Ship_Cost,",
+						"          DateKey = Import_Date,",
+						"          Arrival_Location_ID,",
+						"          WarehouseKey,",
+						"          DepartureLocationKey = LocationKey",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectTemp1",
+						"SelectTemp1, SelectLocation join(Arrival_Location_ID == Location_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinArrLocation",
+						"JoinArrLocation, SelectProduct join(SelectTemp1@Product_ID == SelectProduct@Product_ID",
+						"     && DateKey >= StartDate",
+						"     && DateKey <= EndDate,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'left')~> JoinProduct",
+						"SelectProduct derive(EndDate = coalesce(EndDate, currentDate())) ~> ReplaceNull",
+						"CalTotalWeight select(mapColumn(",
+						"          Quantity,",
+						"          ShipDistance = Ship_Distance,",
+						"          ShipCost = Ship_Cost,",
+						"          DateKey,",
+						"          WarehouseKey,",
+						"          DepartureLocationKey,",
+						"          ArrivalLocationKey = LocationKey,",
+						"          ProductKey,",
+						"          TotalWeight",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> DropUnwantedCol",
+						"JoinProduct derive(TotalWeight = toInteger(Quantity) * Weight) ~> CalTotalWeight",
+						"StagingExport select(mapColumn(",
+						"          Order_ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectExport",
+						"SelectExport, DWHExport join(SelectExport@Order_ID == Source_Order_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinExport",
+						"DWHStorage select(mapColumn(",
+						"          Product_ID,",
+						"          Warehouse_ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectStorage",
+						"JoinExport, SelectStorage join(DWHExport@Product_ID == SelectStorage@Product_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinStorage",
+						"JoinStorage, SelectDWHWarehouse join(SelectStorage@Warehouse_ID == SelectDWHWarehouse@Warehouse_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinDWH1",
+						"DropUnwantedCol sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ImportKey as integer,",
+						"          ImportDate as date,",
+						"          DepartureLocationKey as integer,",
+						"          ArrivalLocationKey as integer,",
+						"          WarehouseKey as integer,",
+						"          ProductKey as integer,",
+						"          Quantity as integer,",
+						"          TotalWeight as double,",
+						"          ShipDistance as double,",
+						"          ShipCost as double",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          ImportDate = DateKey,",
+						"          DepartureLocationKey,",
+						"          ArrivalLocationKey,",
+						"          WarehouseKey,",
+						"          ProductKey,",
+						"          Quantity,",
+						"          TotalWeight,",
+						"          ShipDistance,",
+						"          ShipCost",
+						"     )) ~> FactImport"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Model_Dim_Location')]",
+				"[concat(variables('factoryId'), '/datasets/Model_Dim_Warehouse')]",
+				"[concat(variables('factoryId'), '/datasets/Model_Dim_Product')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Supplier')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Warehouse')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Import')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Import')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Export')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Export')]",
+				"[concat(variables('factoryId'), '/datasets/DWH_Storage')]",
+				"[concat(variables('factoryId'), '/datasets/Model_Fact_Import')]"
+			]
+		}
+	]
+}
