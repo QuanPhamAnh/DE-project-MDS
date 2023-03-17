@@ -31,6 +31,20 @@
 						"type": "DatasetReference"
 					},
 					"name": "DWHWarehouse"
+				},
+				{
+					"dataset": {
+						"referenceName": "Staging_Product",
+						"type": "DatasetReference"
+					},
+					"name": "StagingProduct"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Product",
+						"type": "DatasetReference"
+					},
+					"name": "DWHProduct"
 				}
 			],
 			"sinks": [
@@ -73,6 +87,12 @@
 				{
 					"name": "AlterDimWarehouse",
 					"description": "Enable Upsert"
+				},
+				{
+					"name": "JoinProduct"
+				},
+				{
+					"name": "SelectColProduct"
 				}
 			],
 			"scriptLines": [
@@ -138,6 +158,35 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> DWHWarehouse",
+				"source(output(",
+				"          Product_ID as integer,",
+				"          Product_Name as string,",
+				"          Product_Category as string,",
+				"          Product_Code as integer,",
+				"          Weight as double,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StagingProduct",
+				"source(output(",
+				"          Product_ID as integer,",
+				"          Source_Product_ID as integer,",
+				"          Product_Name as string,",
+				"          Product_Category as string,",
+				"          Product_Code as integer,",
+				"          Weight as double,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DWHProduct",
 				"StagingLocation, DWHLocation join(StagingLocation@Location_ID == Source_Location_ID,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
@@ -176,6 +225,20 @@
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> SelectColWarehouse",
 				"SelectColWarehouse alterRow(updateIf(true())) ~> AlterDimWarehouse",
+				"StagingProduct, DWHProduct join(StagingProduct@Product_ID == Source_Product_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinProduct",
+				"JoinProduct select(mapColumn(",
+				"          Product_ID = DWHProduct@Product_ID,",
+				"          Product_Name = DWHProduct@Product_Name,",
+				"          Product_Category = DWHProduct@Product_Category,",
+				"          Product_Code = DWHProduct@Product_Code,",
+				"          Weight = DWHProduct@Weight",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectColProduct",
 				"AlterDimLocation sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
