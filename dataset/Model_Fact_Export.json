@@ -1,0 +1,75 @@
+{
+	"name": "Model_Fact_Export",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "DataModel"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ExportKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ExportDate",
+				"type": "date"
+			},
+			{
+				"name": "DepartureLocationKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ArrivalLocationKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "WarehouseKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ProductKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ShipLate",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Quantity",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "TotalWeight",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "ShipDistance",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "ShipCost",
+				"type": "float",
+				"precision": 15
+			}
+		],
+		"typeProperties": {
+			"schema": "Model",
+			"table": "FactExport"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

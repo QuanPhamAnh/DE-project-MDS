@@ -1,0 +1,49 @@
+{
+	"name": "Staging_Supplier",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Staging"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Supplier_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Supplier_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Location_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "uuid",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "LastEditedBy",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastEditedWhen",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "Staging",
+			"table": "Supplier"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

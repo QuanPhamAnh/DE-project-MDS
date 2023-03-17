@@ -1,0 +1,71 @@
+{
+	"name": "Staging_Customer",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Staging"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Customer_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "name",
+				"type": "varchar"
+			},
+			{
+				"name": "username",
+				"type": "varchar"
+			},
+			{
+				"name": "sex",
+				"type": "varchar"
+			},
+			{
+				"name": "mail",
+				"type": "varchar"
+			},
+			{
+				"name": "birthdate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Location_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Phone",
+				"type": "varchar"
+			},
+			{
+				"name": "uuid",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "LastEditedBy",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastEditedWhen",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "Staging",
+			"table": "Customer"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

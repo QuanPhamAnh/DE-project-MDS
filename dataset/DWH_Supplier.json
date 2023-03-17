@@ -1,0 +1,54 @@
+{
+	"name": "DWH_Supplier",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "DWH"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Supplier_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Source_Supplier_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Supplier_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Location_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "uuid",
+				"type": "varchar"
+			},
+			{
+				"name": "LastEditedBy",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastEditedWhen",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "DWH",
+			"table": "Supplier"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

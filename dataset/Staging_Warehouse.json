@@ -1,0 +1,54 @@
+{
+	"name": "Staging_Warehouse",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Staging"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Warehouse_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Warehouse_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Warehouse_cost",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Location_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "uuid",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "LastEditedBy",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastEditedWhen",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "Staging",
+			"table": "Warehouse"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

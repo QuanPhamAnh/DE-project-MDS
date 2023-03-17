@@ -1,0 +1,240 @@
+{
+	"name": "Populate_DataModel",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Staging_Location",
+						"type": "DatasetReference"
+					},
+					"name": "StagingLocation"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Location",
+						"type": "DatasetReference"
+					},
+					"name": "DWHLocation"
+				},
+				{
+					"dataset": {
+						"referenceName": "Staging_Warehouse",
+						"type": "DatasetReference"
+					},
+					"name": "StagingWarehouse"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Warehouse",
+						"type": "DatasetReference"
+					},
+					"name": "DWHWarehouse"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Model_Dim_Location",
+						"type": "DatasetReference"
+					},
+					"name": "DimLocation"
+				},
+				{
+					"dataset": {
+						"referenceName": "Model_Dim_Warehouse",
+						"type": "DatasetReference"
+					},
+					"name": "DimWarehouse"
+				}
+			],
+			"transformations": [
+				{
+					"name": "JoinLocation",
+					"description": "Inner join on 'StagingLocation' and 'DWHLocation'"
+				},
+				{
+					"name": "SelectColLocation"
+				},
+				{
+					"name": "AlterDimLocation",
+					"description": "Enable Upsert"
+				},
+				{
+					"name": "JoinWarehouse"
+				},
+				{
+					"name": "JoinLocationWarehouse"
+				},
+				{
+					"name": "SelectColWarehouse"
+				},
+				{
+					"name": "AlterDimWarehouse",
+					"description": "Enable Upsert"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Location_ID as integer,",
+				"          Address as string,",
+				"          Lat as double,",
+				"          Long as double,",
+				"          City as string,",
+				"          Country_code as string,",
+				"          Country_name as string,",
+				"          States as string,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StagingLocation",
+				"source(output(",
+				"          Location_ID as integer,",
+				"          Source_Location_ID as integer,",
+				"          Address as string,",
+				"          Lat as double,",
+				"          Long as double,",
+				"          City as string,",
+				"          Country_code as string,",
+				"          Country_name as string,",
+				"          States as string,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DWHLocation",
+				"source(output(",
+				"          Warehouse_ID as integer,",
+				"          Warehouse_Name as string,",
+				"          Warehouse_cost as double,",
+				"          Location_ID as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StagingWarehouse",
+				"source(output(",
+				"          Warehouse_ID as integer,",
+				"          Source_Warehouse_ID as integer,",
+				"          Warehouse_Name as string,",
+				"          Warehouse_cost as double,",
+				"          Location_ID as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DWHWarehouse",
+				"StagingLocation, DWHLocation join(StagingLocation@Location_ID == Source_Location_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinLocation",
+				"JoinLocation select(mapColumn(",
+				"          Location_ID = DWHLocation@Location_ID,",
+				"          Address = DWHLocation@Address,",
+				"          Lat = DWHLocation@Lat,",
+				"          Long = DWHLocation@Long,",
+				"          City = DWHLocation@City,",
+				"          Country_code = DWHLocation@Country_code,",
+				"          Country_name = DWHLocation@Country_name,",
+				"          States = DWHLocation@States",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectColLocation",
+				"SelectColLocation alterRow(upsertIf(true())) ~> AlterDimLocation",
+				"StagingWarehouse, DWHWarehouse join(StagingWarehouse@Warehouse_ID == Source_Warehouse_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinWarehouse",
+				"JoinWarehouse, DWHLocation join(DWHWarehouse@Location_ID == DWHLocation@Location_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinLocationWarehouse",
+				"JoinLocationWarehouse select(mapColumn(",
+				"          Warehouse_ID = DWHWarehouse@Warehouse_ID,",
+				"          Warehouse_Name = DWHWarehouse@Warehouse_Name,",
+				"          Warehouse_cost = DWHWarehouse@Warehouse_cost,",
+				"          Lat,",
+				"          Long",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectColWarehouse",
+				"SelectColWarehouse alterRow(updateIf(true())) ~> AlterDimWarehouse",
+				"AlterDimLocation sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          LocationKey as integer,",
+				"          Location_ID as integer,",
+				"          Lat as double,",
+				"          Long as double,",
+				"          Address as string,",
+				"          City as string,",
+				"          Country_code as string,",
+				"          Country_name as string,",
+				"          States as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['Location_ID'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Location_ID,",
+				"          Lat,",
+				"          Long,",
+				"          Address,",
+				"          City,",
+				"          Country_code,",
+				"          Country_name,",
+				"          States",
+				"     )) ~> DimLocation",
+				"AlterDimWarehouse sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          WarehouseKey as integer,",
+				"          Warehouse_ID as integer,",
+				"          Warehouse_Name as string,",
+				"          Warehouse_Cost as double,",
+				"          Lat as double,",
+				"          Long as double",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['Warehouse_ID'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Warehouse_ID,",
+				"          Warehouse_Name,",
+				"          Warehouse_Cost = Warehouse_cost,",
+				"          Lat,",
+				"          Long",
+				"     )) ~> DimWarehouse"
+			]
+		}
+	}
+}

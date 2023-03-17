@@ -1,0 +1,58 @@
+{
+	"name": "Staging_Product",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Staging"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Product_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Product_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Product_Category",
+				"type": "varchar"
+			},
+			{
+				"name": "Product_Code",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Weight",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "uuid",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "LastEditedBy",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastEditedWhen",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "Staging",
+			"table": "Product"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

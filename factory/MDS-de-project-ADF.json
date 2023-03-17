@@ -1,0 +1,9 @@
+{
+	"name": "MDS-de-project-ADF",
+	"location": "southeastasia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "2c3b571e-a636-404d-b474-9fcf7cc6c522",
+		"tenantId": "87e57c6a-7e4c-4ea5-9325-f449c2cd7b15"
+	}
+}

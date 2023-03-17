@@ -1,0 +1,74 @@
+{
+	"name": "Staging_Import",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Staging"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Import_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Product_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Warehouse_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Supplier_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Quantity",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Ship_Distance",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Ship_Cost",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Import_Date",
+				"type": "date"
+			},
+			{
+				"name": "uuid",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "LastEditedBy",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastEditedWhen",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "Staging",
+			"table": "Import"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

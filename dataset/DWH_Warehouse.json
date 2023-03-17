@@ -1,0 +1,59 @@
+{
+	"name": "DWH_Warehouse",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "DWH"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Warehouse_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Source_Warehouse_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Warehouse_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Warehouse_cost",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Location_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "uuid",
+				"type": "varchar"
+			},
+			{
+				"name": "LastEditedBy",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastEditedWhen",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "DWH",
+			"table": "Warehouse"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

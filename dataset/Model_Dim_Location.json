@@ -1,0 +1,61 @@
+{
+	"name": "Model_Dim_Location",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "DataModel"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "LocationKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Location_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Lat",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Long",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Address",
+				"type": "varchar"
+			},
+			{
+				"name": "City",
+				"type": "varchar"
+			},
+			{
+				"name": "Country_code",
+				"type": "varchar"
+			},
+			{
+				"name": "Country_name",
+				"type": "varchar"
+			},
+			{
+				"name": "States",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "Model",
+			"table": "DimLocation"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

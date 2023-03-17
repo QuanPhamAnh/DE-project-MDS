@@ -1,0 +1,79 @@
+{
+	"name": "DWH_Import",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDB",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "DWH"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ImportID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Source_Import_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Product_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Warehouse_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Supplier_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Quantity",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Ship_Distance",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Ship_Cost",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Import_Date",
+				"type": "date"
+			},
+			{
+				"name": "uuid",
+				"type": "varchar"
+			},
+			{
+				"name": "LastEditedBy",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastEditedWhen",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "DWH",
+			"table": "Import"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
