@@ -45,6 +45,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "DWHProduct"
+				},
+				{
+					"dataset": {
+						"referenceName": "Model_Dim_Product",
+						"type": "DatasetReference"
+					},
+					"name": "ExistingDimProduct"
 				}
 			],
 			"sinks": [
@@ -61,6 +68,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "DimWarehouse"
+				},
+				{
+					"dataset": {
+						"referenceName": "Model_Dim_Product",
+						"type": "DatasetReference"
+					},
+					"name": "DimProduct"
 				}
 			],
 			"transformations": [
@@ -93,6 +107,53 @@
 				},
 				{
 					"name": "SelectColProduct"
+				},
+				{
+					"name": "FilterCurrently"
+				},
+				{
+					"name": "FilterForUpdate"
+				},
+				{
+					"name": "AddHashExisting"
+				},
+				{
+					"name": "AddNewHash"
+				},
+				{
+					"name": "UpdateExisting"
+				},
+				{
+					"name": "MarkAsUpdate",
+					"description": "Enable Update"
+				},
+				{
+					"name": "DropUnwanted"
+				},
+				{
+					"name": "NewAndUpdate"
+				},
+				{
+					"name": "AddKey"
+				},
+				{
+					"name": "MaxKey"
+				},
+				{
+					"name": "JoinMaxKey"
+				},
+				{
+					"name": "AddDimCol"
+				},
+				{
+					"name": "DropUnwantedCol"
+				},
+				{
+					"name": "MarkAsInsert",
+					"description": "Enable Insert"
+				},
+				{
+					"name": "UnionAll"
 				}
 			],
 			"scriptLines": [
@@ -187,6 +248,21 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> DWHProduct",
+				"source(output(",
+				"          ProductKey as integer,",
+				"          Product_ID as integer,",
+				"          Product_Name as string,",
+				"          Product_Category as string,",
+				"          Product_Code as integer,",
+				"          Weight as double,",
+				"          Currently as integer,",
+				"          StartDate as date,",
+				"          EndDate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> ExistingDimProduct",
 				"StagingLocation, DWHLocation join(StagingLocation@Location_ID == Source_Location_ID,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
@@ -239,6 +315,59 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> SelectColProduct",
+				"ExistingDimProduct filter(Currently == 1) ~> FilterCurrently",
+				"AddHashExisting, AddNewHash exists(AddHashExisting@Hash == AddNewHash@Hash,",
+				"     negate:false,",
+				"     broadcast: 'auto')~> FilterForUpdate",
+				"FilterCurrently derive(Hash = md5(Product_ID,Product_Name,Product_Category,Product_Code,Weight)) ~> AddHashExisting",
+				"SelectColProduct derive(Hash = md5(Product_ID,Product_Name,Product_Category,Product_Code,Weight)) ~> AddNewHash",
+				"FilterForUpdate derive(Currently = 0,",
+				"          EndDate = currentDate()) ~> UpdateExisting",
+				"UpdateExisting alterRow(updateIf(true())) ~> MarkAsUpdate",
+				"MarkAsUpdate select(mapColumn(",
+				"          ProductKey,",
+				"          Product_ID,",
+				"          Product_Name,",
+				"          Product_Category,",
+				"          Product_Code,",
+				"          Weight,",
+				"          Currently,",
+				"          StartDate,",
+				"          EndDate",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> DropUnwanted",
+				"AddNewHash, AddHashExisting exists(AddNewHash@Hash == AddHashExisting@Hash,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> NewAndUpdate",
+				"NewAndUpdate keyGenerate(output(ProductKey as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> AddKey",
+				"AddHashExisting aggregate(MaxProductKey = max(toInteger(byName('ProductKey')))) ~> MaxKey",
+				"AddKey, MaxKey join(ProductKey == MaxProductKey || true(),",
+				"     joinType:'cross',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinMaxKey",
+				"JoinMaxKey derive(Currently = 1,",
+				"          ProductKey = toInteger(ProductKey+MaxProductKey),",
+				"          StartDate = currentDate(),",
+				"          EndDate = toDate(toString(null()))) ~> AddDimCol",
+				"AddDimCol select(mapColumn(",
+				"          Product_ID,",
+				"          Product_Name,",
+				"          Product_Category,",
+				"          Product_Code,",
+				"          Weight,",
+				"          ProductKey,",
+				"          Currently,",
+				"          StartDate,",
+				"          EndDate",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> DropUnwantedCol",
+				"DropUnwantedCol alterRow(insertIf(true())) ~> MarkAsInsert",
+				"MarkAsInsert, DropUnwanted union(byName: true)~> UnionAll",
 				"AlterDimLocation sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
@@ -296,7 +425,39 @@
 				"          Warehouse_Cost = Warehouse_cost,",
 				"          Lat,",
 				"          Long",
-				"     )) ~> DimWarehouse"
+				"     )) ~> DimWarehouse",
+				"UnionAll sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ProductKey as integer,",
+				"          Product_ID as integer,",
+				"          Product_Name as string,",
+				"          Product_Category as string,",
+				"          Product_Code as integer,",
+				"          Weight as double,",
+				"          Currently as integer,",
+				"          StartDate as date,",
+				"          EndDate as date",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ProductKey,",
+				"          Product_ID,",
+				"          Product_Name,",
+				"          Product_Category,",
+				"          Product_Code,",
+				"          Weight,",
+				"          Currently,",
+				"          StartDate,",
+				"          EndDate",
+				"     )) ~> DimProduct"
 			]
 		}
 	}

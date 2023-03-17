@@ -43,6 +43,14 @@
 				"name": "Currently",
 				"type": "int",
 				"precision": 10
+			},
+			{
+				"name": "StartDate",
+				"type": "date"
+			},
+			{
+				"name": "EndDate",
+				"type": "date"
 			}
 		],
 		"typeProperties": {
