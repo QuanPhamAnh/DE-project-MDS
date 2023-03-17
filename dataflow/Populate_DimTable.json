@@ -1,5 +1,5 @@
 {
-	"name": "Populate_DataModel",
+	"name": "Populate_DimTable",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {

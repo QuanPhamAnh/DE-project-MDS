@@ -1,0 +1,476 @@
+{
+	"name": "Populate_FactTable",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Model_Dim_Location",
+						"type": "DatasetReference"
+					},
+					"name": "DimLocation"
+				},
+				{
+					"dataset": {
+						"referenceName": "Model_Dim_Warehouse",
+						"type": "DatasetReference"
+					},
+					"name": "DimWarehouse"
+				},
+				{
+					"dataset": {
+						"referenceName": "Model_Dim_Product",
+						"type": "DatasetReference"
+					},
+					"name": "DimProduct"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Supplier",
+						"type": "DatasetReference"
+					},
+					"name": "DWHSupplier"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Warehouse",
+						"type": "DatasetReference"
+					},
+					"name": "DWHWarehouse"
+				},
+				{
+					"dataset": {
+						"referenceName": "Staging_Import",
+						"type": "DatasetReference"
+					},
+					"name": "StagingImport"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Import",
+						"type": "DatasetReference"
+					},
+					"name": "DWHImport"
+				},
+				{
+					"dataset": {
+						"referenceName": "Staging_Export",
+						"type": "DatasetReference"
+					},
+					"name": "StagingExport"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Export",
+						"type": "DatasetReference"
+					},
+					"name": "DWHExport"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Storage",
+						"type": "DatasetReference"
+					},
+					"name": "DWHStorage"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Model_Fact_Import",
+						"type": "DatasetReference"
+					},
+					"name": "FactImport"
+				}
+			],
+			"transformations": [
+				{
+					"name": "JoinImport"
+				},
+				{
+					"name": "JoinDWH"
+				},
+				{
+					"name": "SelectImport"
+				},
+				{
+					"name": "SelectDWHWarehouse"
+				},
+				{
+					"name": "SelectSupplier"
+				},
+				{
+					"name": "SelectProduct"
+				},
+				{
+					"name": "SelectWarehouse"
+				},
+				{
+					"name": "SelectLocation"
+				},
+				{
+					"name": "JoinSupplier"
+				},
+				{
+					"name": "JoinDimWH"
+				},
+				{
+					"name": "JoinDeptLocation"
+				},
+				{
+					"name": "SelectTemp1"
+				},
+				{
+					"name": "JoinArrLocation"
+				},
+				{
+					"name": "JoinProduct"
+				},
+				{
+					"name": "ReplaceNull"
+				},
+				{
+					"name": "DropUnwantedCol"
+				},
+				{
+					"name": "CalTotalWeight"
+				},
+				{
+					"name": "SelectExport"
+				},
+				{
+					"name": "JoinExport"
+				},
+				{
+					"name": "SelectStorage"
+				},
+				{
+					"name": "JoinStorage"
+				},
+				{
+					"name": "JoinDWH1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          LocationKey as integer,",
+				"          Location_ID as integer,",
+				"          Lat as double,",
+				"          Long as double,",
+				"          Address as string,",
+				"          City as string,",
+				"          Country_code as string,",
+				"          Country_name as string,",
+				"          States as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DimLocation",
+				"source(output(",
+				"          WarehouseKey as integer,",
+				"          Warehouse_ID as integer,",
+				"          Warehouse_Name as string,",
+				"          Warehouse_Cost as double,",
+				"          Lat as double,",
+				"          Long as double",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DimWarehouse",
+				"source(output(",
+				"          ProductKey as integer,",
+				"          Product_ID as integer,",
+				"          Product_Name as string,",
+				"          Product_Category as string,",
+				"          Product_Code as integer,",
+				"          Weight as double,",
+				"          Currently as integer,",
+				"          StartDate as date,",
+				"          EndDate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DimProduct",
+				"source(output(",
+				"          Supplier_ID as integer,",
+				"          Source_Supplier_ID as integer,",
+				"          Supplier_Name as string,",
+				"          Location_ID as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DWHSupplier",
+				"source(output(",
+				"          Warehouse_ID as integer,",
+				"          Source_Warehouse_ID as integer,",
+				"          Warehouse_Name as string,",
+				"          Warehouse_cost as double,",
+				"          Location_ID as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DWHWarehouse",
+				"source(output(",
+				"          Import_ID as integer,",
+				"          Product_ID as integer,",
+				"          Warehouse_ID as integer,",
+				"          Supplier_ID as integer,",
+				"          Quantity as integer,",
+				"          Ship_Distance as double,",
+				"          Ship_Cost as double,",
+				"          Import_Date as date,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StagingImport",
+				"source(output(",
+				"          ImportID as integer,",
+				"          Source_Import_ID as integer,",
+				"          Product_ID as integer,",
+				"          Warehouse_ID as integer,",
+				"          Supplier_ID as integer,",
+				"          Quantity as integer,",
+				"          Ship_Distance as double,",
+				"          Ship_Cost as double,",
+				"          Import_Date as date,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DWHImport",
+				"source(output(",
+				"          Order_ID as integer,",
+				"          Product_ID as integer,",
+				"          Customer_ID as integer,",
+				"          Quantity as integer,",
+				"          Date_Order as date,",
+				"          Date_Ship as date,",
+				"          Date_due as date,",
+				"          Ship_Distance as double,",
+				"          Ship_Cost as double,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StagingExport",
+				"source(output(",
+				"          Order_ID as integer,",
+				"          Source_Order_ID as integer,",
+				"          Product_ID as integer,",
+				"          Customer_ID as integer,",
+				"          Quantity as integer,",
+				"          Date_Order as date,",
+				"          Date_Ship as date,",
+				"          Date_due as date,",
+				"          Ship_Distance as double,",
+				"          Ship_Cost as double,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DWHExport",
+				"source(output(",
+				"          StorageID as integer,",
+				"          Source_StorageID as integer,",
+				"          Product_ID as integer,",
+				"          Warehouse_ID as integer,",
+				"          Capacity as integer,",
+				"          Quantity as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DWHStorage",
+				"SelectImport, DWHImport join(Import_ID == Source_Import_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinImport",
+				"JoinImport, SelectDWHWarehouse join(DWHImport@Warehouse_ID == SelectDWHWarehouse@Warehouse_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinDWH",
+				"StagingImport select(mapColumn(",
+				"          Import_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectImport",
+				"DWHWarehouse select(mapColumn(",
+				"          Warehouse_ID,",
+				"          Arrival_Location_ID = Location_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectDWHWarehouse",
+				"DWHSupplier select(mapColumn(",
+				"          Supplier_ID,",
+				"          Departure_Location_ID = Location_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectSupplier",
+				"DimProduct select(mapColumn(",
+				"          ProductKey,",
+				"          Product_ID,",
+				"          StartDate,",
+				"          EndDate,",
+				"          Weight",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectProduct",
+				"DimWarehouse select(mapColumn(",
+				"          WarehouseKey,",
+				"          Warehouse_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectWarehouse",
+				"DimLocation select(mapColumn(",
+				"          LocationKey,",
+				"          Location_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectLocation",
+				"JoinDWH, SelectSupplier join(DWHImport@Supplier_ID == SelectSupplier@Supplier_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinSupplier",
+				"JoinSupplier, SelectWarehouse join(DWHImport@Warehouse_ID == SelectWarehouse@Warehouse_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinDimWH",
+				"JoinDimWH, SelectLocation join(Arrival_Location_ID == Location_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinDeptLocation",
+				"JoinDeptLocation select(mapColumn(",
+				"          Product_ID,",
+				"          Quantity,",
+				"          Ship_Distance,",
+				"          Ship_Cost,",
+				"          DateKey = Import_Date,",
+				"          Arrival_Location_ID,",
+				"          WarehouseKey,",
+				"          DepartureLocationKey = LocationKey",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectTemp1",
+				"SelectTemp1, SelectLocation join(Arrival_Location_ID == Location_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinArrLocation",
+				"JoinArrLocation, SelectProduct join(SelectTemp1@Product_ID == SelectProduct@Product_ID",
+				"     && DateKey >= StartDate",
+				"     && DateKey <= EndDate,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'left')~> JoinProduct",
+				"SelectProduct derive(EndDate = coalesce(EndDate, currentDate())) ~> ReplaceNull",
+				"CalTotalWeight select(mapColumn(",
+				"          Quantity,",
+				"          ShipDistance = Ship_Distance,",
+				"          ShipCost = Ship_Cost,",
+				"          DateKey,",
+				"          WarehouseKey,",
+				"          DepartureLocationKey,",
+				"          ArrivalLocationKey = LocationKey,",
+				"          ProductKey,",
+				"          TotalWeight",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> DropUnwantedCol",
+				"JoinProduct derive(TotalWeight = toInteger(Quantity) * Weight) ~> CalTotalWeight",
+				"StagingExport select(mapColumn(",
+				"          Order_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectExport",
+				"SelectExport, DWHExport join(SelectExport@Order_ID == Source_Order_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinExport",
+				"DWHStorage select(mapColumn(",
+				"          Product_ID,",
+				"          Warehouse_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectStorage",
+				"JoinExport, SelectStorage join(DWHExport@Product_ID == SelectStorage@Product_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinStorage",
+				"JoinStorage, SelectDWHWarehouse join(SelectStorage@Warehouse_ID == SelectDWHWarehouse@Warehouse_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinDWH1",
+				"DropUnwantedCol sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ImportKey as integer,",
+				"          ImportDate as date,",
+				"          DepartureLocationKey as integer,",
+				"          ArrivalLocationKey as integer,",
+				"          WarehouseKey as integer,",
+				"          ProductKey as integer,",
+				"          Quantity as integer,",
+				"          TotalWeight as double,",
+				"          ShipDistance as double,",
+				"          ShipCost as double",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ImportDate = DateKey,",
+				"          DepartureLocationKey,",
+				"          ArrivalLocationKey,",
+				"          WarehouseKey,",
+				"          ProductKey,",
+				"          Quantity,",
+				"          TotalWeight,",
+				"          ShipDistance,",
+				"          ShipCost",
+				"     )) ~> FactImport"
+			]
+		}
+	}
+}
