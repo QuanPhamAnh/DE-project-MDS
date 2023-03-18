@@ -73,6 +73,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "DWHStorage"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Customer",
+						"type": "DatasetReference"
+					},
+					"name": "DWHCustomer"
 				}
 			],
 			"sinks": [
@@ -82,6 +89,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "FactImport"
+				},
+				{
+					"dataset": {
+						"referenceName": "Model_Fact_Export",
+						"type": "DatasetReference"
+					},
+					"name": "FactExport"
 				}
 			],
 			"transformations": [
@@ -150,6 +164,33 @@
 				},
 				{
 					"name": "JoinDWH1"
+				},
+				{
+					"name": "SelectCustomer"
+				},
+				{
+					"name": "JoinCustomer"
+				},
+				{
+					"name": "JoinDeptLocation1"
+				},
+				{
+					"name": "SelectTemp2"
+				},
+				{
+					"name": "JoinArrLocation1"
+				},
+				{
+					"name": "JoinDimWH1"
+				},
+				{
+					"name": "JoinProduct1"
+				},
+				{
+					"name": "CalTotalWeightShipLate"
+				},
+				{
+					"name": "DropUnwantedColumn"
 				}
 			],
 			"scriptLines": [
@@ -309,6 +350,24 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> DWHStorage",
+				"source(output(",
+				"          Customer_ID as integer,",
+				"          Source_Customer_ID as integer,",
+				"          Name as string,",
+				"          Username as string,",
+				"          Sex as string,",
+				"          Mail as string,",
+				"          Birthdate as timestamp,",
+				"          Location_ID as integer,",
+				"          Phone as string,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DWHCustomer",
 				"SelectImport, DWHImport join(Import_ID == Source_Import_ID,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
@@ -395,7 +454,7 @@
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
-				"     broadcast: 'left')~> JoinProduct",
+				"     broadcast: 'right')~> JoinProduct",
 				"SelectProduct derive(EndDate = coalesce(EndDate, currentDate())) ~> ReplaceNull",
 				"CalTotalWeight select(mapColumn(",
 				"          Quantity,",
@@ -437,6 +496,69 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> JoinDWH1",
+				"DWHCustomer select(mapColumn(",
+				"          Customer_ID,",
+				"          Location_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectCustomer",
+				"JoinDWH1, SelectCustomer join(DWHExport@Customer_ID == Location_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinCustomer",
+				"JoinCustomer, SelectLocation join(Arrival_Location_ID == SelectLocation@Location_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinDeptLocation1",
+				"JoinDeptLocation1 select(mapColumn(",
+				"          Product_ID = DWHExport@Product_ID,",
+				"          Quantity,",
+				"          Date_Order,",
+				"          Date_Ship,",
+				"          Date_due,",
+				"          Ship_Distance,",
+				"          Ship_Cost,",
+				"          Warehouse_ID = SelectDWHWarehouse@Warehouse_ID,",
+				"          Location_ID = SelectCustomer@Location_ID,",
+				"          DepartureLocationKey = LocationKey",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectTemp2",
+				"SelectTemp2, SelectLocation join(SelectTemp2@Location_ID == SelectLocation@Location_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinArrLocation1",
+				"JoinArrLocation1, SelectWarehouse join(SelectTemp2@Warehouse_ID == SelectWarehouse@Warehouse_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinDimWH1",
+				"JoinDimWH1, SelectProduct join(SelectTemp2@Product_ID == SelectProduct@Product_ID",
+				"     && Date_Order >= StartDate",
+				"     && Date_Order <= EndDate,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'right')~> JoinProduct1",
+				"JoinProduct1 derive(TotalWeight = toInteger(Quantity) * Weight,",
+				"          ShipLate = greatest(0, minus(Date_Ship, Date_due))) ~> CalTotalWeightShipLate",
+				"CalTotalWeightShipLate select(mapColumn(",
+				"          Quantity,",
+				"          ExportDate = Date_Ship,",
+				"          ShipDistance = Ship_Distance,",
+				"          ShipCost = Ship_Cost,",
+				"          DepartureLocationKey,",
+				"          ArrivalLocationKey = LocationKey,",
+				"          WarehouseKey,",
+				"          ProductKey,",
+				"          TotalWeight,",
+				"          ShipLate",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> DropUnwantedColumn",
 				"DropUnwantedCol sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
@@ -469,7 +591,42 @@
 				"          TotalWeight,",
 				"          ShipDistance,",
 				"          ShipCost",
-				"     )) ~> FactImport"
+				"     )) ~> FactImport",
+				"DropUnwantedColumn sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ExportKey as integer,",
+				"          ExportDate as date,",
+				"          DepartureLocationKey as integer,",
+				"          ArrivalLocationKey as integer,",
+				"          WarehouseKey as integer,",
+				"          ProductKey as integer,",
+				"          ShipLate as integer,",
+				"          Quantity as integer,",
+				"          TotalWeight as double,",
+				"          ShipDistance as double,",
+				"          ShipCost as double",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ExportDate,",
+				"          DepartureLocationKey,",
+				"          ArrivalLocationKey,",
+				"          WarehouseKey,",
+				"          ProductKey,",
+				"          ShipLate,",
+				"          Quantity,",
+				"          TotalWeight,",
+				"          ShipDistance,",
+				"          ShipCost",
+				"     )) ~> FactExport"
 			]
 		}
 	}
