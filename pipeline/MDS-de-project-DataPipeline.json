@@ -8,7 +8,7 @@
 				"type": "ExecuteDataFlow",
 				"dependsOn": [
 					{
-						"activity": "Extract Data_copy1_copy1",
+						"activity": "Extract Data_Level3",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -100,7 +100,7 @@
 				}
 			},
 			{
-				"name": "Extract Data",
+				"name": "Extract Data_Level1",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
@@ -113,7 +113,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "Extract_Raw_To_Staging",
+						"referenceName": "Extract_Raw_To_Staging_level1",
 						"type": "DataFlowReference"
 					},
 					"compute": {
@@ -183,11 +183,11 @@
 				}
 			},
 			{
-				"name": "Extract Data_copy1",
+				"name": "Extract Data_Level2",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [
 					{
-						"activity": "Extract Data",
+						"activity": "Extract Data_Level1",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -203,7 +203,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "Extract_Raw_To_Staging",
+						"referenceName": "Extract_Raw_To_Staging_level2",
 						"type": "DataFlowReference"
 					},
 					"compute": {
@@ -215,11 +215,11 @@
 				}
 			},
 			{
-				"name": "Extract Data_copy1_copy1",
+				"name": "Extract Data_Level3",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [
 					{
-						"activity": "Extract Data_copy1",
+						"activity": "Extract Data_Level2",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -235,7 +235,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "Extract_Raw_To_Staging",
+						"referenceName": "Extract_Raw_To_Staging_level3",
 						"type": "DataFlowReference"
 					},
 					"compute": {
