@@ -175,6 +175,10 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
+					"dataflow": {
+						"referenceName": "Populate_DWH_level3",
+						"type": "DataFlowReference"
+					},
 					"integrationRuntime": {
 						"referenceName": "integrationRuntime",
 						"type": "IntegrationRuntimeReference"
