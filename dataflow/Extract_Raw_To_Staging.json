@@ -246,6 +246,9 @@
 				},
 				{
 					"name": "GroupCust"
+				},
+				{
+					"name": "aggregate1"
 				}
 			],
 			"scriptLines": [
@@ -414,7 +417,7 @@
 				"          Country_code = 'US',",
 				"          Country_name = 'America') ~> AddMissingCol",
 				"AddMissingCol, CustomerLocation, WarehouseLocation union(byName: true)~> UnionLocation",
-				"UnionLocation cast(output(",
+				"aggregate1 cast(output(",
 				"          Lat as double,",
 				"          Long as double",
 				"     ),",
@@ -433,7 +436,7 @@
 				"          LastEditedBy = 'devname') ~> AddProductSchema",
 				"CastCustID, CastID join(CastTypeCustomer@Lat == Deduplicate@Lat",
 				"     && CastTypeCustomer@Long == Deduplicate@Long",
-				"     && RawCustomer@Address == Deduplicate@Address,",
+				"     && GroupCust@Address == Deduplicate@Address,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
@@ -634,6 +637,13 @@
 				"          Country_code = max(Country_code),",
 				"          Country_name = max(Country_name),",
 				"          States = max(States)) ~> GroupCust",
+				"UnionLocation aggregate(groupBy(Address,",
+				"          Lat,",
+				"          Long),",
+				"     States = max(States),",
+				"          City = max(City),",
+				"          Country_code = max(Country_code),",
+				"          Country_name = max(Country_name)) ~> aggregate1",
 				"JoinCustL sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
