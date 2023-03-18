@@ -10,7 +10,7 @@
 					{
 						"activity": "Extract Data",
 						"dependencyConditions": [
-							"Completed"
+							"Succeeded"
 						]
 					}
 				],
