@@ -404,7 +404,7 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> SupplierLocation",
-				"SupplierLocation derive(City = toString(null()),",
+				"SupplierLocation derive(City = toString('N/A'),",
 				"          Country_code = 'US',",
 				"          Country_name = 'America') ~> AddMissingCol",
 				"AddMissingCol, CustomerLocation, WarehouseLocation union(byName: true)~> UnionLocation",
