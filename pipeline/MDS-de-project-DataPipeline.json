@@ -42,7 +42,7 @@
 					{
 						"activity": "Populate DWH_Level3",
 						"dependencyConditions": [
-							"Completed"
+							"Succeeded"
 						]
 					}
 				],
