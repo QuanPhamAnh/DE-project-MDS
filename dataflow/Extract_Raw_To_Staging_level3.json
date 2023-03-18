@@ -155,6 +155,9 @@
 				},
 				{
 					"name": "AddStorageID"
+				},
+				{
+					"name": "SelectStorage"
 				}
 			],
 			"scriptLines": [
@@ -426,9 +429,32 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> SelSupp",
-				"JoinStorage keyGenerate(output(StorageID as long),",
+				"SelectStorage keyGenerate(output(StorageID as long),",
 				"     startAt: 1L,",
 				"     stepValue: 1L) ~> AddStorageID",
+				"JoinStorage select(mapColumn(",
+				"          Product_Code = CastTypeProduct@Product_Code,",
+				"          NoID,",
+				"          Product_Name,",
+				"          Weight,",
+				"          Product_SubCategory,",
+				"          Product_Color,",
+				"          Standard_Cost,",
+				"          General_Price,",
+				"          Product_Number,",
+				"          Import_Flag,",
+				"          Warehouse_Name = Group@Warehouse_Name,",
+				"          uuid,",
+				"          LastEditedWhen,",
+				"          LastEditedBy,",
+				"          Product_ID,",
+				"          Product_Code = SelProd@Product_Code,",
+				"          Warehouse_ID,",
+				"          Warehouse_Name = SelWH@Warehouse_Name,",
+				"          Location_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectStorage",
 				"AddStorageSchema sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
