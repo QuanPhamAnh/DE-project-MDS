@@ -259,6 +259,23 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Populate_DWH_level3",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"StagingStorage": {},
+									"StagingImport": {},
+									"StagingExport": {},
+									"DWHWarehouse": {},
+									"DWHProduct": {},
+									"DWHSupplier": {},
+									"DWHCustomer": {},
+									"DWHStorage": {},
+									"DWHImport": {},
+									"DWHExport": {}
+								}
+							},
 							"staging": {},
 							"integrationRuntime": {
 								"referenceName": "integrationRuntime",
@@ -371,6 +388,7 @@
 				"[concat(variables('factoryId'), '/dataflows/Populate_FactTable')]",
 				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level1')]",
 				"[concat(variables('factoryId'), '/dataflows/Populate_DWH_level2')]",
+				"[concat(variables('factoryId'), '/dataflows/Populate_DWH_level3')]",
 				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level2')]",
 				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level3')]"
 			]

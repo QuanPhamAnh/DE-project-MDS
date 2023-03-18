@@ -251,6 +251,23 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Populate_DWH_level3",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"StagingStorage": {},
+									"StagingImport": {},
+									"StagingExport": {},
+									"DWHWarehouse": {},
+									"DWHProduct": {},
+									"DWHSupplier": {},
+									"DWHCustomer": {},
+									"DWHStorage": {},
+									"DWHImport": {},
+									"DWHExport": {}
+								}
+							},
 							"staging": {},
 							"integrationRuntime": {
 								"referenceName": "integrationRuntime",
