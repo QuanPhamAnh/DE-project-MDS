@@ -2354,16 +2354,16 @@
 						"          Long as double",
 						"     ),",
 						"     errors: true) ~> CastTypeLocation",
-						"CastTypeLocation derive(uuid = md5(),",
+						"CastTypeLocation derive(uuid = md5(Lat,Long),",
 						"          LastEditedBy = 'devname',",
 						"          LastEditedWhen = currentUTC()) ~> AddLocationSchema",
-						"CastTypeCustomer derive(uuid = md5(),",
+						"CastTypeCustomer derive(uuid = md5(username),",
 						"          LastEditedBy = 'devname',",
 						"          LastEditedWhen = currentUTC()) ~> AddCustomerSchema",
-						"CastTypeWarehouse derive(uuid = md5(),",
+						"CastTypeWarehouse derive(uuid = md5(Warehouse_Name),",
 						"          LastEditedWhen = currentUTC(),",
 						"          LastEditedBy = 'devname') ~> AddWarehouseSchema",
-						"CastTypeProduct derive(uuid = md5(),",
+						"CastTypeProduct derive(uuid = md5(Product_Name,Product_Code),",
 						"          LastEditedWhen = currentUTC(),",
 						"          LastEditedBy = 'devname') ~> AddProductSchema",
 						"CastCustID, CastID join(CastTypeCustomer@Lat == CastTypeLocation@Lat",
@@ -2426,7 +2426,7 @@
 						"     broadcast: 'auto')~> JoinSupL",
 						"CastSupID derive(LastEditedWhen = currentUTC(),",
 						"          LastEditedBy = 'devname',",
-						"          uuid = md5()) ~> AddSupplierSchema",
+						"          uuid = md5(SupplierName)) ~> AddSupplierSchema",
 						"CastProID, CastWHID join(RawProduct@Warehouse_Name == RawWarehouse@Warehouse_Name,",
 						"     joinType:'inner',",
 						"     matchType:'exact',",
@@ -2434,10 +2434,10 @@
 						"     broadcast: 'auto')~> JoinStorage",
 						"JoinStorage derive(LastEditedWhen = currentUTC(),",
 						"          LastEditedBy = 'devname',",
-						"          uuid = md5(),",
+						"          uuid = md5(Product_Name,Lat,Long),",
 						"          Capacity = toInteger(9999),",
 						"          Quantity = toInteger(9999)) ~> AddStorageSchema",
-						"JoinExportCust derive(uuid = md5(),",
+						"JoinExportCust derive(uuid = md5(Order_ID),",
 						"          LastEditedWhen = currentUTC(),",
 						"          LastEditedBy = 'devname') ~> AddExportSchema",
 						"CastTypeExport keyGenerate(output(Export_ID as long),",
@@ -2479,7 +2479,7 @@
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> JoinImportPro",
-						"JoinImportPro derive(uuid = md5(),",
+						"JoinImportPro derive(uuid = md5(Import_ID),",
 						"          LastEditedWhen = currentUTC(),",
 						"          LastEditedBy = 'devname') ~> AddImportSchema",
 						"JoinCustL sink(allowSchemaDrift: true,",
@@ -3034,410 +3034,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "Staging_Storage",
-								"type": "DatasetReference"
-							},
-							"name": "StagingStorage"
-						},
-						{
-							"dataset": {
-								"referenceName": "Staging_Import",
-								"type": "DatasetReference"
-							},
-							"name": "StagingImport"
-						},
-						{
-							"dataset": {
-								"referenceName": "Staging_Export",
-								"type": "DatasetReference"
-							},
-							"name": "StagingExport"
-						},
-						{
-							"dataset": {
-								"referenceName": "DWH_Warehouse",
-								"type": "DatasetReference"
-							},
-							"name": "DWHWarehouse"
-						},
-						{
-							"dataset": {
-								"referenceName": "DWH_Product",
-								"type": "DatasetReference"
-							},
-							"name": "DWHProduct"
-						},
-						{
-							"dataset": {
-								"referenceName": "DWH_Supplier",
-								"type": "DatasetReference"
-							},
-							"name": "DWHSupplier"
-						},
-						{
-							"dataset": {
-								"referenceName": "DWH_Customer",
-								"type": "DatasetReference"
-							},
-							"name": "DWHCustomer"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "DWH_Storage",
-								"type": "DatasetReference"
-							},
-							"name": "DWHStorage"
-						},
-						{
-							"dataset": {
-								"referenceName": "DWH_Import",
-								"type": "DatasetReference"
-							},
-							"name": "DWHImport"
-						},
-						{
-							"dataset": {
-								"referenceName": "DWH_Export",
-								"type": "DatasetReference"
-							},
-							"name": "DWHExport"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AlterStorage"
-						},
-						{
-							"name": "JoinStoreWH"
-						},
-						{
-							"name": "SelectWarehouse"
-						},
-						{
-							"name": "SelectProduct"
-						},
-						{
-							"name": "JoinStoreProd"
-						},
-						{
-							"name": "SelectSupplier"
-						},
-						{
-							"name": "JoinImportWH"
-						},
-						{
-							"name": "JoinImportProd"
-						},
-						{
-							"name": "JoinImportSupplier"
-						},
-						{
-							"name": "JoinExportProd"
-						},
-						{
-							"name": "SelectCustomer"
-						},
-						{
-							"name": "JoinExportCustomer"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          StorageID as integer,",
-						"          Product_ID as integer,",
-						"          Warehouse_ID as integer,",
-						"          Capacity as integer,",
-						"          Quantity as integer,",
-						"          uuid as string,",
-						"          LastEditedBy as string,",
-						"          LastEditedWhen as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> StagingStorage",
-						"source(output(",
-						"          Import_ID as integer,",
-						"          Product_ID as integer,",
-						"          Warehouse_ID as integer,",
-						"          Supplier_ID as integer,",
-						"          Quantity as integer,",
-						"          Ship_Distance as double,",
-						"          Ship_Cost as double,",
-						"          Import_Date as date,",
-						"          uuid as string,",
-						"          LastEditedBy as string,",
-						"          LastEditedWhen as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> StagingImport",
-						"source(output(",
-						"          Order_ID as integer,",
-						"          Product_ID as integer,",
-						"          Customer_ID as integer,",
-						"          Quantity as integer,",
-						"          Date_Order as date,",
-						"          Date_Ship as date,",
-						"          Date_due as date,",
-						"          Ship_Distance as double,",
-						"          Ship_Cost as double,",
-						"          uuid as string,",
-						"          LastEditedBy as string,",
-						"          LastEditedWhen as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> StagingExport",
-						"source(output(",
-						"          Warehouse_ID as integer,",
-						"          Source_Warehouse_ID as integer,",
-						"          Warehouse_Name as string,",
-						"          Warehouse_cost as double,",
-						"          Location_ID as integer,",
-						"          uuid as string,",
-						"          LastEditedBy as string,",
-						"          LastEditedWhen as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> DWHWarehouse",
-						"source(output(",
-						"          Product_ID as integer,",
-						"          Source_Product_ID as integer,",
-						"          Product_Name as string,",
-						"          Product_Category as string,",
-						"          Product_Code as integer,",
-						"          Weight as double,",
-						"          uuid as string,",
-						"          LastEditedBy as string,",
-						"          LastEditedWhen as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> DWHProduct",
-						"source(output(",
-						"          Supplier_ID as integer,",
-						"          Source_Supplier_ID as integer,",
-						"          Supplier_Name as string,",
-						"          Location_ID as integer,",
-						"          uuid as string,",
-						"          LastEditedBy as string,",
-						"          LastEditedWhen as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> DWHSupplier",
-						"source(output(",
-						"          Customer_ID as integer,",
-						"          Source_Customer_ID as integer,",
-						"          Name as string,",
-						"          Username as string,",
-						"          Sex as string,",
-						"          Mail as string,",
-						"          Birthdate as timestamp,",
-						"          Location_ID as integer,",
-						"          Phone as string,",
-						"          uuid as string,",
-						"          LastEditedBy as string,",
-						"          LastEditedWhen as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> DWHCustomer",
-						"JoinStoreProd alterRow(upsertIf(true())) ~> AlterStorage",
-						"StagingStorage, SelectWarehouse join(StagingStorage@Warehouse_ID == Source_Warehouse_ID,",
-						"     joinType:'inner',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> JoinStoreWH",
-						"DWHWarehouse select(mapColumn(",
-						"          Warehouse_ID,",
-						"          Source_Warehouse_ID",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> SelectWarehouse",
-						"DWHProduct select(mapColumn(",
-						"          Product_ID,",
-						"          Source_Product_ID",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> SelectProduct",
-						"JoinStoreWH, SelectProduct join(StagingStorage@Product_ID == Source_Product_ID,",
-						"     joinType:'inner',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> JoinStoreProd",
-						"DWHSupplier select(mapColumn(",
-						"          Supplier_ID,",
-						"          Source_Supplier_ID",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> SelectSupplier",
-						"StagingImport, SelectWarehouse join(StagingImport@Warehouse_ID == Source_Warehouse_ID,",
-						"     joinType:'inner',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> JoinImportWH",
-						"JoinImportWH, SelectProduct join(StagingImport@Product_ID == Source_Product_ID,",
-						"     joinType:'inner',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> JoinImportProd",
-						"JoinImportProd, SelectSupplier join(StagingImport@Supplier_ID == Source_Supplier_ID,",
-						"     joinType:'inner',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> JoinImportSupplier",
-						"StagingExport, SelectProduct join(StagingExport@Product_ID == Source_Product_ID,",
-						"     joinType:'inner',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> JoinExportProd",
-						"DWHCustomer select(mapColumn(",
-						"          Customer_ID,",
-						"          Source_Customer_ID",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> SelectCustomer",
-						"JoinExportProd, SelectCustomer join(StagingExport@Customer_ID == Source_Customer_ID,",
-						"     joinType:'inner',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> JoinExportCustomer",
-						"AlterStorage sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          StorageID as integer,",
-						"          Source_StorageID as integer,",
-						"          Product_ID as integer,",
-						"          Warehouse_ID as integer,",
-						"          Capacity as integer,",
-						"          Quantity as integer,",
-						"          uuid as string,",
-						"          LastEditedBy as string,",
-						"          LastEditedWhen as timestamp",
-						"     ),",
-						"     deletable:false,",
-						"     insertable:false,",
-						"     updateable:false,",
-						"     upsertable:true,",
-						"     keys:['Source_StorageID'],",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError',",
-						"     mapColumn(",
-						"          Source_StorageID = StorageID,",
-						"          Product_ID = SelectProduct@Product_ID,",
-						"          Warehouse_ID = SelectWarehouse@Warehouse_ID,",
-						"          Capacity,",
-						"          Quantity,",
-						"          uuid,",
-						"          LastEditedBy,",
-						"          LastEditedWhen",
-						"     )) ~> DWHStorage",
-						"JoinImportSupplier sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          ImportID as integer,",
-						"          Source_Import_ID as integer,",
-						"          Product_ID as integer,",
-						"          Warehouse_ID as integer,",
-						"          Supplier_ID as integer,",
-						"          Quantity as integer,",
-						"          Ship_Distance as double,",
-						"          Ship_Cost as double,",
-						"          Import_Date as date,",
-						"          uuid as string,",
-						"          LastEditedBy as string,",
-						"          LastEditedWhen as timestamp",
-						"     ),",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:false,",
-						"     upsertable:false,",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError',",
-						"     mapColumn(",
-						"          Source_Import_ID = Import_ID,",
-						"          Product_ID = SelectProduct@Product_ID,",
-						"          Warehouse_ID = SelectWarehouse@Warehouse_ID,",
-						"          Supplier_ID = SelectSupplier@Supplier_ID,",
-						"          Quantity,",
-						"          Ship_Distance,",
-						"          Ship_Cost,",
-						"          Import_Date,",
-						"          uuid,",
-						"          LastEditedBy,",
-						"          LastEditedWhen",
-						"     )) ~> DWHImport",
-						"JoinExportCustomer sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          Order_ID as integer,",
-						"          Source_Order_ID as integer,",
-						"          Product_ID as integer,",
-						"          Customer_ID as integer,",
-						"          Quantity as integer,",
-						"          Date_Order as date,",
-						"          Date_Ship as date,",
-						"          Date_due as date,",
-						"          Ship_Distance as double,",
-						"          Ship_Cost as double,",
-						"          uuid as string,",
-						"          LastEditedBy as string,",
-						"          LastEditedWhen as timestamp",
-						"     ),",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:false,",
-						"     upsertable:false,",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError',",
-						"     mapColumn(",
-						"          Source_Order_ID = Order_ID,",
-						"          Product_ID = SelectProduct@Product_ID,",
-						"          Customer_ID = SelectCustomer@Customer_ID,",
-						"          Quantity,",
-						"          Date_Order,",
-						"          Date_Ship,",
-						"          Date_due,",
-						"          Ship_Distance,",
-						"          Ship_Cost,",
-						"          uuid,",
-						"          LastEditedBy,",
-						"          LastEditedWhen",
-						"     )) ~> DWHExport"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Staging_Storage')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/MDS-de-project-DataPipeline')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -3685,23 +3281,6 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"dataflow": {
-								"referenceName": "dataflow1",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"StagingStorage": {},
-									"StagingImport": {},
-									"StagingExport": {},
-									"DWHWarehouse": {},
-									"DWHProduct": {},
-									"DWHSupplier": {},
-									"DWHCustomer": {},
-									"DWHStorage": {},
-									"DWHImport": {},
-									"DWHExport": {}
-								}
-							},
 							"staging": {},
 							"compute": {
 								"coreCount": 8,
@@ -3723,8 +3302,7 @@
 				"[concat(variables('factoryId'), '/dataflows/Populate_DimTable')]",
 				"[concat(variables('factoryId'), '/dataflows/Populate_FactTable')]",
 				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging')]",
-				"[concat(variables('factoryId'), '/dataflows/Populate_DWH_level2')]",
-				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+				"[concat(variables('factoryId'), '/dataflows/Populate_DWH_level2')]"
 			]
 		}
 	]
