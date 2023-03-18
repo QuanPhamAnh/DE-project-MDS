@@ -206,12 +206,6 @@
 					"name": "AddExportSchema"
 				},
 				{
-					"name": "AddExportID"
-				},
-				{
-					"name": "CastExportID"
-				},
-				{
 					"name": "JoinExportCust"
 				},
 				{
@@ -243,6 +237,15 @@
 				},
 				{
 					"name": "SelectImport"
+				},
+				{
+					"name": "AddExportKey"
+				},
+				{
+					"name": "CastExportID"
+				},
+				{
+					"name": "GroupCust"
 				}
 			],
 			"scriptLines": [
@@ -340,7 +343,7 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> RawImport",
-				"RawCustomer cast(output(",
+				"GroupCust cast(output(",
 				"          birthdate as date,",
 				"          Lat as double,",
 				"          Long as double",
@@ -377,7 +380,7 @@
 				"          Product_Code as integer",
 				"     ),",
 				"     errors: true) ~> CastTypeImport",
-				"RawCustomer select(mapColumn(",
+				"GroupCust select(mapColumn(",
 				"          Address,",
 				"          Lat,",
 				"          Long,",
@@ -505,19 +508,12 @@
 				"JoinExportCust derive(uuid = uuid(),",
 				"          LastEditedWhen = currentUTC(),",
 				"          LastEditedBy = 'devname') ~> AddExportSchema",
-				"CastTypeExport keyGenerate(output(Export_ID as long),",
-				"     startAt: 1L,",
-				"     stepValue: 1L) ~> AddExportID",
-				"AddExportID cast(output(",
-				"          Export_ID as integer",
-				"     ),",
-				"     errors: true) ~> CastExportID",
 				"JoinExportPro, CastCustID join(RawExport@username == RawCustomer@username,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> JoinExportCust",
-				"CastExportID, CastProID join(CastTypeExport@Product_Code == CastTypeProduct@Product_Code,",
+				"CastTypeExport, CastProID join(CastTypeExport@Product_Code == CastTypeProduct@Product_Code,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
@@ -612,6 +608,32 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> SelectImport",
+				"AddExportSchema keyGenerate(output(Export_ID as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> AddExportKey",
+				"AddExportKey cast(output(",
+				"          Export_ID as integer",
+				"     ),",
+				"     errors: true) ~> CastExportID",
+				"RawCustomer aggregate(groupBy(username),",
+				"     Customer_ID = max(Customer_ID),",
+				"          job = max(job),",
+				"          company = max(company),",
+				"          ssn = max(ssn),",
+				"          residence = max(residence),",
+				"          website = max(website),",
+				"          name = max(name),",
+				"          sex = max(sex),",
+				"          mail = max(mail),",
+				"          birthdate = max(birthdate),",
+				"          Address = max(Address),",
+				"          Lat = max(Lat),",
+				"          Long = max(Long),",
+				"          Post_Code = max(Post_Code),",
+				"          City = max(City),",
+				"          Country_code = max(Country_code),",
+				"          Country_name = max(Country_name),",
+				"          States = max(States)) ~> GroupCust",
 				"JoinCustL sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
@@ -798,7 +820,7 @@
 				"          LastEditedBy,",
 				"          LastEditedWhen",
 				"     )) ~> StagingStorage",
-				"AddExportSchema sink(allowSchemaDrift: true,",
+				"CastExportID sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          Order_ID as integer,",
