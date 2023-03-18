@@ -1,0 +1,71 @@
+{
+	"name": "RawProduct",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "RawData"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "product_df.csv",
+				"container": "mds-de-project-blobs"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "NoID",
+				"type": "String"
+			},
+			{
+				"name": "Product_Code",
+				"type": "String"
+			},
+			{
+				"name": "Product_Name",
+				"type": "String"
+			},
+			{
+				"name": "Weight",
+				"type": "String"
+			},
+			{
+				"name": "Product_SubCategory",
+				"type": "String"
+			},
+			{
+				"name": "Product_Color",
+				"type": "String"
+			},
+			{
+				"name": "Standard_Cost",
+				"type": "String"
+			},
+			{
+				"name": "General_Price",
+				"type": "String"
+			},
+			{
+				"name": "Product_Number",
+				"type": "String"
+			},
+			{
+				"name": "Import_Flag",
+				"type": "String"
+			},
+			{
+				"name": "Warehouse_Name",
+				"type": "String"
+			}
+		]
+	}
+}

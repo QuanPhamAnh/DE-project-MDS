@@ -1,0 +1,71 @@
+{
+	"name": "RawWarehouse",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "RawData"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "warehouse_df.csv",
+				"container": "mds-de-project-blobs"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "Warehouse_ID",
+				"type": "String"
+			},
+			{
+				"name": "Warehouse_Name",
+				"type": "String"
+			},
+			{
+				"name": "Warehouse_cost",
+				"type": "String"
+			},
+			{
+				"name": "Address",
+				"type": "String"
+			},
+			{
+				"name": "Lat",
+				"type": "String"
+			},
+			{
+				"name": "Long",
+				"type": "String"
+			},
+			{
+				"name": "Post_Code",
+				"type": "String"
+			},
+			{
+				"name": "City",
+				"type": "String"
+			},
+			{
+				"name": "Country_code",
+				"type": "String"
+			},
+			{
+				"name": "Country_name",
+				"type": "String"
+			},
+			{
+				"name": "States",
+				"type": "String"
+			}
+		]
+	}
+}

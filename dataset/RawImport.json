@@ -1,0 +1,59 @@
+{
+	"name": "RawImport",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "RawData"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "import_df.csv",
+				"container": "mds-de-project-blobs"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "Import_ID",
+				"type": "String"
+			},
+			{
+				"name": "Quantity",
+				"type": "String"
+			},
+			{
+				"name": "Ship_Distance",
+				"type": "String"
+			},
+			{
+				"name": "Ship_Cost",
+				"type": "String"
+			},
+			{
+				"name": "ImportDate",
+				"type": "String"
+			},
+			{
+				"name": "Product_Code",
+				"type": "String"
+			},
+			{
+				"name": "Warehouse_Name",
+				"type": "String"
+			},
+			{
+				"name": "SupplierName",
+				"type": "String"
+			}
+		]
+	}
+}
