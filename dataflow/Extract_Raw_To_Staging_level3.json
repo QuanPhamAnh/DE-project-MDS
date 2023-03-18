@@ -91,12 +91,6 @@
 					"name": "AddProductSchema"
 				},
 				{
-					"name": "AddStoreID"
-				},
-				{
-					"name": "CastStoreID"
-				},
-				{
 					"name": "JoinStorage"
 				},
 				{
@@ -158,6 +152,9 @@
 				},
 				{
 					"name": "SelSupp"
+				},
+				{
+					"name": "AddStorageID"
 				}
 			],
 			"scriptLines": [
@@ -288,13 +285,6 @@
 				"CastTypeProduct derive(uuid = uuid(),",
 				"          LastEditedWhen = currentUTC(),",
 				"          LastEditedBy = 'devname') ~> AddProductSchema",
-				"AddProductSchema keyGenerate(output(Storage_ID as long),",
-				"     startAt: 1L,",
-				"     stepValue: 1L) ~> AddStoreID",
-				"AddStoreID cast(output(",
-				"          Storage_ID as integer",
-				"     ),",
-				"     errors: true) ~> CastStoreID",
 				"JoinProd, SelWH join(Group@Warehouse_Name == SelWH@Warehouse_Name,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
@@ -412,16 +402,17 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> SelWH",
-				"CastStoreID, SelProd join(CastTypeProduct@Product_Code == SelProd@Product_Code,",
+				"AddProductSchema, SelProd join(CastTypeProduct@Product_Code == SelProd@Product_Code,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> JoinProd",
-				"JoinStorage derive(Quantity = toInteger(99999),",
+				"AddStorageID derive(Quantity = toInteger(99999),",
 				"          Capacity = toInteger(99999),",
 				"          uuid = uuid(),",
 				"          LastModifiedWhen = currentUTC(),",
-				"          LastModifiedBy = 'devname') ~> AddStorageSchema",
+				"          LastModifiedBy = 'devname',",
+				"          StorageID = toInteger(StorageID)) ~> AddStorageSchema",
 				"StagingCustomer select(mapColumn(",
 				"          Customer_ID,",
 				"          username",
@@ -435,6 +426,9 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> SelSupp",
+				"JoinStorage keyGenerate(output(StorageID as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> AddStorageID",
 				"AddStorageSchema sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
@@ -456,7 +450,7 @@
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          StorageID = Storage_ID,",
+				"          StorageID,",
 				"          Product_ID,",
 				"          Warehouse_ID,",
 				"          Capacity,",
