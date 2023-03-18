@@ -1,0 +1,334 @@
+{
+	"name": "Extract_Raw_To_Staging_level1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "RawCustomer",
+						"type": "DatasetReference"
+					},
+					"name": "RawCustomer"
+				},
+				{
+					"dataset": {
+						"referenceName": "RawWarehouse",
+						"type": "DatasetReference"
+					},
+					"name": "RawWarehouse"
+				},
+				{
+					"dataset": {
+						"referenceName": "RawSupplier",
+						"type": "DatasetReference"
+					},
+					"name": "RawSupplier"
+				},
+				{
+					"dataset": {
+						"referenceName": "RawProduct",
+						"type": "DatasetReference"
+					},
+					"name": "RawProduct"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Staging_Location",
+						"type": "DatasetReference"
+					},
+					"name": "StagingLocation"
+				},
+				{
+					"dataset": {
+						"referenceName": "Staging_Product",
+						"type": "DatasetReference"
+					},
+					"name": "StagingProduct"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CastTypeProduct"
+				},
+				{
+					"name": "CustomerLocation"
+				},
+				{
+					"name": "WarehouseLocation"
+				},
+				{
+					"name": "SupplierLocation"
+				},
+				{
+					"name": "AddMissingCol"
+				},
+				{
+					"name": "UnionLocation"
+				},
+				{
+					"name": "CastTypeLocation"
+				},
+				{
+					"name": "AddLocationSchema"
+				},
+				{
+					"name": "AddProductSchema"
+				},
+				{
+					"name": "AddLocationKey"
+				},
+				{
+					"name": "CastID"
+				},
+				{
+					"name": "AddProID"
+				},
+				{
+					"name": "CastProID"
+				},
+				{
+					"name": "Deduplicate"
+				},
+				{
+					"name": "Group"
+				},
+				{
+					"name": "aggregate1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Customer_ID as string,",
+				"          job as string,",
+				"          company as string,",
+				"          ssn as string,",
+				"          residence as string,",
+				"          website as string,",
+				"          username as string,",
+				"          name as string,",
+				"          sex as string,",
+				"          mail as string,",
+				"          birthdate as string,",
+				"          Address as string,",
+				"          Lat as string,",
+				"          Long as string,",
+				"          Post_Code as string,",
+				"          City as string,",
+				"          Country_code as string,",
+				"          Country_name as string,",
+				"          States as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> RawCustomer",
+				"source(output(",
+				"          Warehouse_ID as string,",
+				"          Warehouse_Name as string,",
+				"          Warehouse_cost as string,",
+				"          Address as string,",
+				"          Lat as string,",
+				"          Long as string,",
+				"          Post_Code as string,",
+				"          City as string,",
+				"          Country_code as string,",
+				"          Country_name as string,",
+				"          States as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> RawWarehouse",
+				"source(output(",
+				"          Supplier_ID as string,",
+				"          SupplierName as string,",
+				"          Address as string,",
+				"          States as string,",
+				"          Lat as string,",
+				"          Long as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> RawSupplier",
+				"source(output(",
+				"          NoID as string,",
+				"          Product_Code as string,",
+				"          Product_Name as string,",
+				"          Weight as string,",
+				"          Product_SubCategory as string,",
+				"          Product_Color as string,",
+				"          Standard_Cost as string,",
+				"          General_Price as string,",
+				"          Product_Number as string,",
+				"          Import_Flag as string,",
+				"          Warehouse_Name as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> RawProduct",
+				"Group cast(output(",
+				"          Product_Code as integer,",
+				"          Weight as double,",
+				"          Standard_Cost as double,",
+				"          General_Price as double",
+				"     ),",
+				"     errors: true) ~> CastTypeProduct",
+				"RawCustomer select(mapColumn(",
+				"          Address,",
+				"          Lat,",
+				"          Long,",
+				"          City,",
+				"          Country_code,",
+				"          Country_name,",
+				"          States",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> CustomerLocation",
+				"RawWarehouse select(mapColumn(",
+				"          Address,",
+				"          Lat,",
+				"          Long,",
+				"          City,",
+				"          Country_code,",
+				"          Country_name,",
+				"          States",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> WarehouseLocation",
+				"RawSupplier select(mapColumn(",
+				"          Address,",
+				"          States,",
+				"          Lat,",
+				"          Long",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SupplierLocation",
+				"SupplierLocation derive(City = toString('N/A'),",
+				"          Country_code = 'US',",
+				"          Country_name = 'America') ~> AddMissingCol",
+				"AddMissingCol, CustomerLocation, WarehouseLocation union(byName: true)~> UnionLocation",
+				"aggregate1 cast(output(",
+				"          Lat as double,",
+				"          Long as double",
+				"     ),",
+				"     errors: true) ~> CastTypeLocation",
+				"Deduplicate derive(uuid = uuid(),",
+				"          LastEditedBy = 'devname',",
+				"          LastEditedWhen = currentUTC()) ~> AddLocationSchema",
+				"CastTypeProduct derive(uuid = uuid(),",
+				"          LastEditedWhen = currentUTC(),",
+				"          LastEditedBy = 'devname') ~> AddProductSchema",
+				"AddLocationSchema keyGenerate(output(Location_ID as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> AddLocationKey",
+				"AddLocationKey cast(output(",
+				"          Location_ID as integer",
+				"     ),",
+				"     errors: true) ~> CastID",
+				"AddProductSchema keyGenerate(output(Product_ID as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> AddProID",
+				"AddProID cast(output(",
+				"          Product_ID as integer",
+				"     ),",
+				"     errors: true) ~> CastProID",
+				"CastTypeLocation select(mapColumn(",
+				"          Address,",
+				"          States,",
+				"          Lat,",
+				"          Long,",
+				"          City,",
+				"          Country_code,",
+				"          Country_name",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> Deduplicate",
+				"RawProduct aggregate(groupBy(Product_Code),",
+				"     NoID = max(NoID),",
+				"          Product_Name = max(Product_Name),",
+				"          Weight = max(Weight),",
+				"          Product_SubCategory = max(Product_SubCategory),",
+				"          Product_Color = max(Product_Color),",
+				"          Standard_Cost = max(Standard_Cost),",
+				"          General_Price = max(General_Price),",
+				"          Product_Number = max(Product_Number),",
+				"          Import_Flag = max(Import_Flag),",
+				"          Warehouse_Name = max(Warehouse_Name)) ~> Group",
+				"UnionLocation aggregate(groupBy(Address,",
+				"          Lat,",
+				"          Long),",
+				"     States = max(States),",
+				"          City = max(City),",
+				"          Country_code = max(Country_code),",
+				"          Country_name = max(Country_name)) ~> aggregate1",
+				"CastID sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Location_ID as integer,",
+				"          Address as string,",
+				"          Lat as double,",
+				"          Long as double,",
+				"          City as string,",
+				"          Country_code as string,",
+				"          Country_name as string,",
+				"          States as string,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Location_ID,",
+				"          Address,",
+				"          Lat,",
+				"          Long,",
+				"          City,",
+				"          Country_code,",
+				"          Country_name,",
+				"          States,",
+				"          uuid,",
+				"          LastEditedBy,",
+				"          LastEditedWhen",
+				"     )) ~> StagingLocation",
+				"CastProID sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Product_ID as integer,",
+				"          Product_Name as string,",
+				"          Product_Category as string,",
+				"          Product_Code as integer,",
+				"          Weight as double,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Product_ID,",
+				"          Product_Name,",
+				"          Product_Category = Product_SubCategory,",
+				"          Product_Code,",
+				"          Weight,",
+				"          uuid,",
+				"          LastEditedBy,",
+				"          LastEditedWhen",
+				"     )) ~> StagingProduct"
+			]
+		}
+	}
+}
