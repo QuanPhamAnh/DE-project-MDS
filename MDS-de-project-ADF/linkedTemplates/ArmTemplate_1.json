@@ -910,6 +910,9 @@
 						},
 						{
 							"name": "Deduplicate"
+						},
+						{
+							"name": "Group"
 						}
 					],
 					"scriptLines": [
@@ -1019,7 +1022,7 @@
 						"          Long as double",
 						"     ),",
 						"     errors: true) ~> CastTypeWarehouse",
-						"RawProduct cast(output(",
+						"Group cast(output(",
 						"          Product_Code as integer,",
 						"          Weight as double,",
 						"          Standard_Cost as double,",
@@ -1159,7 +1162,7 @@
 						"CastSupID derive(LastEditedWhen = currentUTC(),",
 						"          LastEditedBy = 'devname',",
 						"          uuid = uuid()) ~> AddSupplierSchema",
-						"CastProID, CastWHID join(RawProduct@Warehouse_Name == RawWarehouse@Warehouse_Name,",
+						"CastProID, CastWHID join(Group@Warehouse_Name == RawWarehouse@Warehouse_Name,",
 						"     joinType:'inner',",
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
@@ -1225,6 +1228,17 @@
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> Deduplicate",
+						"RawProduct aggregate(groupBy(Product_Code),",
+						"     NoID = max(NoID),",
+						"          Product_Name = max(Product_Name),",
+						"          Weight = max(Weight),",
+						"          Product_SubCategory = max(Product_SubCategory),",
+						"          Product_Color = max(Product_Color),",
+						"          Standard_Cost = max(Standard_Cost),",
+						"          General_Price = max(General_Price),",
+						"          Product_Number = max(Product_Number),",
+						"          Import_Flag = max(Import_Flag),",
+						"          Warehouse_Name = max(Warehouse_Name)) ~> Group",
 						"JoinCustL sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
