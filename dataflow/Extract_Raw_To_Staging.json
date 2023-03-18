@@ -218,12 +218,6 @@
 					"name": "JoinExportPro"
 				},
 				{
-					"name": "AddImportID"
-				},
-				{
-					"name": "CastImportID"
-				},
-				{
 					"name": "JoinImportSup"
 				},
 				{
@@ -240,6 +234,15 @@
 				},
 				{
 					"name": "Group"
+				},
+				{
+					"name": "AddImportID"
+				},
+				{
+					"name": "CastImportID"
+				},
+				{
+					"name": "SelectImport"
 				}
 			],
 			"scriptLines": [
@@ -519,14 +522,7 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> JoinExportPro",
-				"CastTypeImport keyGenerate(output(Import_ID as long),",
-				"     startAt: 1L,",
-				"     stepValue: 1L) ~> AddImportID",
-				"AddImportID cast(output(",
-				"          Import_ID as integer",
-				"     ),",
-				"     errors: true) ~> CastImportID",
-				"CastImportID, CastSupID join(RawImport@SupplierName == RawSupplier@SupplierName,",
+				"CastTypeImport, CastSupID join(RawImport@SupplierName == RawSupplier@SupplierName,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
@@ -566,6 +562,56 @@
 				"          Product_Number = max(Product_Number),",
 				"          Import_Flag = max(Import_Flag),",
 				"          Warehouse_Name = max(Warehouse_Name)) ~> Group",
+				"SelectImport keyGenerate(output(Import_ID as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> AddImportID",
+				"AddImportID cast(output(",
+				"          Quantity as integer",
+				"     ),",
+				"     errors: true) ~> CastImportID",
+				"AddImportSchema select(mapColumn(",
+				"          Quantity,",
+				"          Ship_Distance,",
+				"          Ship_Cost,",
+				"          ImportDate,",
+				"          Product_Code = CastTypeImport@Product_Code,",
+				"          Warehouse_Name = RawImport@Warehouse_Name,",
+				"          SupplierName = RawImport@SupplierName,",
+				"          Supplier_ID,",
+				"          SupplierName = RawSupplier@SupplierName,",
+				"          Address = RawSupplier@Address,",
+				"          States = RawSupplier@States,",
+				"          Lat = CastTypeSupplier@Lat,",
+				"          Long = CastTypeSupplier@Long,",
+				"          Warehouse_ID,",
+				"          Warehouse_Name = RawWarehouse@Warehouse_Name,",
+				"          Warehouse_cost,",
+				"          Address = RawWarehouse@Address,",
+				"          Lat = CastTypeWarehouse@Lat,",
+				"          Long = CastTypeWarehouse@Long,",
+				"          Post_Code,",
+				"          City,",
+				"          Country_code,",
+				"          Country_name,",
+				"          States = RawWarehouse@States,",
+				"          uuid,",
+				"          LastEditedWhen,",
+				"          LastEditedBy,",
+				"          Product_Code = CastTypeProduct@Product_Code,",
+				"          NoID,",
+				"          Product_Name,",
+				"          Weight,",
+				"          Product_SubCategory,",
+				"          Product_Color,",
+				"          Standard_Cost,",
+				"          General_Price,",
+				"          Product_Number,",
+				"          Import_Flag,",
+				"          Warehouse_Name = Group@Warehouse_Name,",
+				"          Product_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectImport",
 				"JoinCustL sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
@@ -790,7 +836,7 @@
 				"          LastEditedBy,",
 				"          LastEditedWhen",
 				"     )) ~> StagingExport",
-				"AddImportSchema sink(allowSchemaDrift: true,",
+				"CastImportID sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          Import_ID as integer,",
