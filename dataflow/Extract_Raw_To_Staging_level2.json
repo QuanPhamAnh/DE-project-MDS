@@ -1,0 +1,369 @@
+{
+	"name": "Extract_Raw_To_Staging_level2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "RawCustomer",
+						"type": "DatasetReference"
+					},
+					"name": "RawCustomer"
+				},
+				{
+					"dataset": {
+						"referenceName": "RawWarehouse",
+						"type": "DatasetReference"
+					},
+					"name": "RawWarehouse"
+				},
+				{
+					"dataset": {
+						"referenceName": "RawSupplier",
+						"type": "DatasetReference"
+					},
+					"name": "RawSupplier"
+				},
+				{
+					"dataset": {
+						"referenceName": "Staging_Location",
+						"type": "DatasetReference"
+					},
+					"name": "StagingLocation"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Staging_Customer",
+						"type": "DatasetReference"
+					},
+					"name": "StagingCustomer"
+				},
+				{
+					"dataset": {
+						"referenceName": "Staging_Warehouse",
+						"type": "DatasetReference"
+					},
+					"name": "StagingWarehouse"
+				},
+				{
+					"dataset": {
+						"referenceName": "Staging_Supplier",
+						"type": "DatasetReference"
+					},
+					"name": "StagingSupplier"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CastTypeCustomer"
+				},
+				{
+					"name": "CastTypeWarehouse"
+				},
+				{
+					"name": "SupplierLocation"
+				},
+				{
+					"name": "AddCustomerSchema"
+				},
+				{
+					"name": "AddWarehouseSchema"
+				},
+				{
+					"name": "JoinCustL"
+				},
+				{
+					"name": "AddWHID"
+				},
+				{
+					"name": "CastWHID"
+				},
+				{
+					"name": "JoinWHL"
+				},
+				{
+					"name": "AddCustID"
+				},
+				{
+					"name": "CastCustID"
+				},
+				{
+					"name": "CastTypeSupplier"
+				},
+				{
+					"name": "AddSupID"
+				},
+				{
+					"name": "CastSupID"
+				},
+				{
+					"name": "JoinSupL"
+				},
+				{
+					"name": "AddSupplierSchema"
+				},
+				{
+					"name": "GroupCust"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Customer_ID as string,",
+				"          job as string,",
+				"          company as string,",
+				"          ssn as string,",
+				"          residence as string,",
+				"          website as string,",
+				"          username as string,",
+				"          name as string,",
+				"          sex as string,",
+				"          mail as string,",
+				"          birthdate as string,",
+				"          Address as string,",
+				"          Lat as string,",
+				"          Long as string,",
+				"          Post_Code as string,",
+				"          City as string,",
+				"          Country_code as string,",
+				"          Country_name as string,",
+				"          States as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> RawCustomer",
+				"source(output(",
+				"          Warehouse_ID as string,",
+				"          Warehouse_Name as string,",
+				"          Warehouse_cost as string,",
+				"          Address as string,",
+				"          Lat as string,",
+				"          Long as string,",
+				"          Post_Code as string,",
+				"          City as string,",
+				"          Country_code as string,",
+				"          Country_name as string,",
+				"          States as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> RawWarehouse",
+				"source(output(",
+				"          Supplier_ID as string,",
+				"          SupplierName as string,",
+				"          Address as string,",
+				"          States as string,",
+				"          Lat as string,",
+				"          Long as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> RawSupplier",
+				"source(output(",
+				"          Location_ID as integer,",
+				"          Address as string,",
+				"          Lat as double,",
+				"          Long as double,",
+				"          City as string,",
+				"          Country_code as string,",
+				"          Country_name as string,",
+				"          States as string,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StagingLocation",
+				"GroupCust cast(output(",
+				"          birthdate as date,",
+				"          Lat as double,",
+				"          Long as double",
+				"     ),",
+				"     errors: true) ~> CastTypeCustomer",
+				"RawWarehouse cast(output(",
+				"          Warehouse_cost as double,",
+				"          Lat as double,",
+				"          Long as double",
+				"     ),",
+				"     errors: true) ~> CastTypeWarehouse",
+				"StagingLocation select(mapColumn(",
+				"          Address,",
+				"          States,",
+				"          Lat,",
+				"          Long",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SupplierLocation",
+				"CastTypeCustomer derive(uuid = uuid(),",
+				"          LastEditedBy = 'devname',",
+				"          LastEditedWhen = currentUTC()) ~> AddCustomerSchema",
+				"CastTypeWarehouse derive(uuid = uuid(),",
+				"          LastEditedWhen = currentUTC(),",
+				"          LastEditedBy = 'devname') ~> AddWarehouseSchema",
+				"CastCustID, SupplierLocation join(CastTypeCustomer@Lat == Deduplicate@Lat",
+				"     && CastTypeCustomer@Long == Deduplicate@Long",
+				"     && GroupCust@Address == Deduplicate@Address,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinCustL",
+				"AddWarehouseSchema keyGenerate(output(Warehouse_ID as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> AddWHID",
+				"AddWHID cast(output(",
+				"          Warehouse_ID as integer",
+				"     ),",
+				"     errors: true) ~> CastWHID",
+				"CastWHID, SupplierLocation join(CastTypeWarehouse@Lat == Deduplicate@Lat",
+				"     && CastTypeWarehouse@Long == Deduplicate@Long",
+				"     && RawWarehouse@Address == Deduplicate@Address,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinWHL",
+				"AddCustomerSchema keyGenerate(output(Customer_ID as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> AddCustID",
+				"AddCustID cast(output(",
+				"          Customer_ID as integer",
+				"     ),",
+				"     errors: true) ~> CastCustID",
+				"RawSupplier cast(output(",
+				"          Lat as double,",
+				"          Long as double",
+				"     ),",
+				"     errors: true) ~> CastTypeSupplier",
+				"CastTypeSupplier keyGenerate(output(Supplier_ID as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> AddSupID",
+				"AddSupID cast(output(",
+				"          Supplier_ID as integer",
+				"     ),",
+				"     errors: true) ~> CastSupID",
+				"AddSupplierSchema, SupplierLocation join(CastTypeSupplier@Lat == Deduplicate@Lat",
+				"     && CastTypeSupplier@Long == Deduplicate@Long",
+				"     && RawSupplier@Address == Deduplicate@Address,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinSupL",
+				"CastSupID derive(LastEditedWhen = currentUTC(),",
+				"          LastEditedBy = 'devname',",
+				"          uuid = uuid()) ~> AddSupplierSchema",
+				"RawCustomer aggregate(groupBy(username),",
+				"     Customer_ID = max(Customer_ID),",
+				"          job = max(job),",
+				"          company = max(company),",
+				"          ssn = max(ssn),",
+				"          residence = max(residence),",
+				"          website = max(website),",
+				"          name = max(name),",
+				"          sex = max(sex),",
+				"          mail = max(mail),",
+				"          birthdate = max(birthdate),",
+				"          Address = max(Address),",
+				"          Lat = max(Lat),",
+				"          Long = max(Long),",
+				"          Post_Code = max(Post_Code),",
+				"          City = max(City),",
+				"          Country_code = max(Country_code),",
+				"          Country_name = max(Country_name),",
+				"          States = max(States)) ~> GroupCust",
+				"JoinCustL sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Customer_ID as integer,",
+				"          name as string,",
+				"          username as string,",
+				"          sex as string,",
+				"          mail as string,",
+				"          birthdate as timestamp,",
+				"          Location_ID as integer,",
+				"          Phone as string,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Customer_ID,",
+				"          name,",
+				"          username,",
+				"          sex,",
+				"          mail,",
+				"          birthdate,",
+				"          Location_ID,",
+				"          Phone = ssn,",
+				"          uuid,",
+				"          LastEditedBy,",
+				"          LastEditedWhen",
+				"     )) ~> StagingCustomer",
+				"JoinWHL sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Warehouse_ID as integer,",
+				"          Warehouse_Name as string,",
+				"          Warehouse_cost as double,",
+				"          Location_ID as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Warehouse_ID,",
+				"          Warehouse_Name,",
+				"          Warehouse_cost,",
+				"          Location_ID,",
+				"          uuid,",
+				"          LastEditedBy,",
+				"          LastEditedWhen",
+				"     )) ~> StagingWarehouse",
+				"JoinSupL sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Supplier_ID as integer,",
+				"          Supplier_Name as string,",
+				"          Location_ID as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Supplier_ID,",
+				"          Supplier_Name = SupplierName,",
+				"          Location_ID,",
+				"          uuid = AddSupplierSchema@uuid,",
+				"          LastEditedBy = AddSupplierSchema@LastEditedBy,",
+				"          LastEditedWhen = AddSupplierSchema@LastEditedWhen",
+				"     )) ~> StagingSupplier"
+			]
+		}
+	}
+}
