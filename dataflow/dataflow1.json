@@ -1,0 +1,206 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Staging_Storage",
+						"type": "DatasetReference"
+					},
+					"name": "StagingStorage"
+				},
+				{
+					"dataset": {
+						"referenceName": "Staging_Import",
+						"type": "DatasetReference"
+					},
+					"name": "StagingImport"
+				},
+				{
+					"dataset": {
+						"referenceName": "Staging_Export",
+						"type": "DatasetReference"
+					},
+					"name": "StagingExport"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Warehouse",
+						"type": "DatasetReference"
+					},
+					"name": "DWHWarehouse"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Product",
+						"type": "DatasetReference"
+					},
+					"name": "DWHProduct"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DWH_Storage",
+						"type": "DatasetReference"
+					},
+					"name": "DWHStorage"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AlterStorage"
+				},
+				{
+					"name": "JoinStoreWH"
+				},
+				{
+					"name": "SelectWarehouse"
+				},
+				{
+					"name": "SelectProduct"
+				},
+				{
+					"name": "JoinStoreProd"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          StorageID as integer,",
+				"          Product_ID as integer,",
+				"          Warehouse_ID as integer,",
+				"          Capacity as integer,",
+				"          Quantity as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StagingStorage",
+				"source(output(",
+				"          Import_ID as integer,",
+				"          Product_ID as integer,",
+				"          Warehouse_ID as integer,",
+				"          Supplier_ID as integer,",
+				"          Quantity as integer,",
+				"          Ship_Distance as double,",
+				"          Ship_Cost as double,",
+				"          Import_Date as date,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StagingImport",
+				"source(output(",
+				"          Order_ID as integer,",
+				"          Product_ID as integer,",
+				"          Customer_ID as integer,",
+				"          Quantity as integer,",
+				"          Date_Order as date,",
+				"          Date_Ship as date,",
+				"          Date_due as date,",
+				"          Ship_Distance as double,",
+				"          Ship_Cost as double,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StagingExport",
+				"source(output(",
+				"          Warehouse_ID as integer,",
+				"          Source_Warehouse_ID as integer,",
+				"          Warehouse_Name as string,",
+				"          Warehouse_cost as double,",
+				"          Location_ID as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DWHWarehouse",
+				"source(output(",
+				"          Product_ID as integer,",
+				"          Source_Product_ID as integer,",
+				"          Product_Name as string,",
+				"          Product_Category as string,",
+				"          Product_Code as integer,",
+				"          Weight as double,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DWHProduct",
+				"JoinStoreProd alterRow(upsertIf(true())) ~> AlterStorage",
+				"StagingStorage, SelectWarehouse join(StagingStorage@Warehouse_ID == Source_Warehouse_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinStoreWH",
+				"DWHWarehouse select(mapColumn(",
+				"          Warehouse_ID,",
+				"          Source_Warehouse_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectWarehouse",
+				"DWHProduct select(mapColumn(",
+				"          Product_ID,",
+				"          Source_Product_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectProduct",
+				"JoinStoreWH, SelectProduct join(StagingStorage@Product_ID == Source_Product_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinStoreProd",
+				"AlterStorage sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          StorageID as integer,",
+				"          Source_StorageID as integer,",
+				"          Product_ID as integer,",
+				"          Warehouse_ID as integer,",
+				"          Capacity as integer,",
+				"          Quantity as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['Source_StorageID'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Source_StorageID = StorageID,",
+				"          Product_ID = SelectProduct@Product_ID,",
+				"          Warehouse_ID = SelectWarehouse@Warehouse_ID,",
+				"          Capacity,",
+				"          Quantity,",
+				"          uuid,",
+				"          LastEditedBy,",
+				"          LastEditedWhen",
+				"     )) ~> DWHStorage"
+			]
+		}
+	}
+}
