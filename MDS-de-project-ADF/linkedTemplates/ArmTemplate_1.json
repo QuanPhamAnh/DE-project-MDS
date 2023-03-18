@@ -2464,12 +2464,6 @@
 							"name": "AddProductSchema"
 						},
 						{
-							"name": "AddStoreID"
-						},
-						{
-							"name": "CastStoreID"
-						},
-						{
 							"name": "JoinStorage"
 						},
 						{
@@ -2531,6 +2525,12 @@
 						},
 						{
 							"name": "SelSupp"
+						},
+						{
+							"name": "AddStorageID"
+						},
+						{
+							"name": "SelectStorage"
 						}
 					],
 					"scriptLines": [
@@ -2661,13 +2661,6 @@
 						"CastTypeProduct derive(uuid = uuid(),",
 						"          LastEditedWhen = currentUTC(),",
 						"          LastEditedBy = 'devname') ~> AddProductSchema",
-						"AddProductSchema keyGenerate(output(Storage_ID as long),",
-						"     startAt: 1L,",
-						"     stepValue: 1L) ~> AddStoreID",
-						"AddStoreID cast(output(",
-						"          Storage_ID as integer",
-						"     ),",
-						"     errors: true) ~> CastStoreID",
 						"JoinProd, SelWH join(Group@Warehouse_Name == SelWH@Warehouse_Name,",
 						"     joinType:'inner',",
 						"     matchType:'exact',",
@@ -2785,16 +2778,17 @@
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> SelWH",
-						"CastStoreID, SelProd join(CastTypeProduct@Product_Code == SelProd@Product_Code,",
+						"AddProductSchema, SelProd join(CastTypeProduct@Product_Code == SelProd@Product_Code,",
 						"     joinType:'inner',",
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> JoinProd",
-						"JoinStorage derive(Quantity = toInteger(99999),",
+						"AddStorageID derive(Quantity = toInteger(99999),",
 						"          Capacity = toInteger(99999),",
 						"          uuid = uuid(),",
 						"          LastModifiedWhen = currentUTC(),",
-						"          LastModifiedBy = 'devname') ~> AddStorageSchema",
+						"          LastModifiedBy = 'devname',",
+						"          StorageID = toInteger(StorageID)) ~> AddStorageSchema",
 						"StagingCustomer select(mapColumn(",
 						"          Customer_ID,",
 						"          username",
@@ -2808,6 +2802,32 @@
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> SelSupp",
+						"SelectStorage keyGenerate(output(StorageID as long),",
+						"     startAt: 1L,",
+						"     stepValue: 1L) ~> AddStorageID",
+						"JoinStorage select(mapColumn(",
+						"          Product_Code = CastTypeProduct@Product_Code,",
+						"          NoID,",
+						"          Product_Name,",
+						"          Weight,",
+						"          Product_SubCategory,",
+						"          Product_Color,",
+						"          Standard_Cost,",
+						"          General_Price,",
+						"          Product_Number,",
+						"          Import_Flag,",
+						"          Warehouse_Name = Group@Warehouse_Name,",
+						"          uuid,",
+						"          LastEditedWhen,",
+						"          LastEditedBy,",
+						"          Product_ID,",
+						"          Product_Code = SelProd@Product_Code,",
+						"          Warehouse_ID,",
+						"          Warehouse_Name = SelWH@Warehouse_Name,",
+						"          Location_ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectStorage",
 						"AddStorageSchema sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
@@ -2829,7 +2849,7 @@
 						"     skipDuplicateMapOutputs: true,",
 						"     errorHandlingOption: 'stopOnFirstError',",
 						"     mapColumn(",
-						"          StorageID = Storage_ID,",
+						"          StorageID,",
 						"          Product_ID,",
 						"          Warehouse_ID,",
 						"          Capacity,",
@@ -4824,6 +4844,36 @@
 				"[concat(variables('factoryId'), '/dataflows/Populate_DWH_level2')]",
 				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level2')]",
 				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level3')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DailyBuild')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "MDS-de-project-DataPipeline",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Hour",
+						"interval": 24,
+						"startTime": "2023-03-18T00:00:00",
+						"timeZone": "SE Asia Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/MDS-de-project-DataPipeline')]"
 			]
 		}
 	]
