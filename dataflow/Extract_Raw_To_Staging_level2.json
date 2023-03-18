@@ -107,6 +107,9 @@
 				},
 				{
 					"name": "GroupCust"
+				},
+				{
+					"name": "ToDateTime"
 				}
 			],
 			"scriptLines": [
@@ -191,8 +194,8 @@
 				"     ),",
 				"     errors: true) ~> CastTypeWarehouse",
 				"StagingLocation select(mapColumn(",
+				"          Location_ID,",
 				"          Address,",
-				"          States,",
 				"          Lat,",
 				"          Long",
 				"     ),",
@@ -204,9 +207,9 @@
 				"CastTypeWarehouse derive(uuid = uuid(),",
 				"          LastEditedWhen = currentUTC(),",
 				"          LastEditedBy = 'devname') ~> AddWarehouseSchema",
-				"CastCustID, SupplierLocation join(CastTypeCustomer@Lat == Deduplicate@Lat",
-				"     && CastTypeCustomer@Long == Deduplicate@Long",
-				"     && GroupCust@Address == Deduplicate@Address,",
+				"CastCustID, SupplierLocation join(CastTypeCustomer@Lat == SupplierLocation@Lat",
+				"     && CastTypeCustomer@Long == SupplierLocation@Long",
+				"     && GroupCust@Address == SupplierLocation@Address,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
@@ -218,9 +221,9 @@
 				"          Warehouse_ID as integer",
 				"     ),",
 				"     errors: true) ~> CastWHID",
-				"CastWHID, SupplierLocation join(CastTypeWarehouse@Lat == Deduplicate@Lat",
-				"     && CastTypeWarehouse@Long == Deduplicate@Long",
-				"     && RawWarehouse@Address == Deduplicate@Address,",
+				"CastWHID, SupplierLocation join(CastTypeWarehouse@Lat == SupplierLocation@Lat",
+				"     && CastTypeWarehouse@Long == SupplierLocation@Long",
+				"     && RawWarehouse@Address == SupplierLocation@Address,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
@@ -244,9 +247,9 @@
 				"          Supplier_ID as integer",
 				"     ),",
 				"     errors: true) ~> CastSupID",
-				"AddSupplierSchema, SupplierLocation join(CastTypeSupplier@Lat == Deduplicate@Lat",
-				"     && CastTypeSupplier@Long == Deduplicate@Long",
-				"     && RawSupplier@Address == Deduplicate@Address,",
+				"AddSupplierSchema, SupplierLocation join(RawSupplier@Address == SupplierLocation@Address",
+				"     && CastTypeSupplier@Lat == SupplierLocation@Lat",
+				"     && CastTypeSupplier@Long == SupplierLocation@Long,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
@@ -273,7 +276,8 @@
 				"          Country_code = max(Country_code),",
 				"          Country_name = max(Country_name),",
 				"          States = max(States)) ~> GroupCust",
-				"JoinCustL sink(allowSchemaDrift: true,",
+				"JoinCustL derive(birthdate = toTimestamp(toString(birthdate))) ~> ToDateTime",
+				"ToDateTime sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          Customer_ID as integer,",
@@ -359,9 +363,9 @@
 				"          Supplier_ID,",
 				"          Supplier_Name = SupplierName,",
 				"          Location_ID,",
-				"          uuid = AddSupplierSchema@uuid,",
-				"          LastEditedBy = AddSupplierSchema@LastEditedBy,",
-				"          LastEditedWhen = AddSupplierSchema@LastEditedWhen",
+				"          uuid,",
+				"          LastEditedBy,",
+				"          LastEditedWhen",
 				"     )) ~> StagingSupplier"
 			]
 		}
