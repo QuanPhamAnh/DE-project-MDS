@@ -32,7 +32,7 @@
 						"type": "ExecuteDataFlow",
 						"dependsOn": [
 							{
-								"activity": "Extract Data_copy1_copy1",
+								"activity": "Extract Data_Level3",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -163,7 +163,7 @@
 						}
 					},
 					{
-						"name": "Extract Data",
+						"name": "Extract Data_Level1",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [],
 						"policy": {
@@ -176,7 +176,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "Extract_Raw_To_Staging",
+								"referenceName": "Extract_Raw_To_Staging_level1",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
@@ -184,16 +184,8 @@
 									"RawWarehouse": {},
 									"RawSupplier": {},
 									"RawProduct": {},
-									"RawExport": {},
-									"RawImport": {},
-									"StagingCustomer": {},
 									"StagingLocation": {},
-									"StagingWarehouse": {},
-									"StagingProduct": {},
-									"StagingSupplier": {},
-									"StagingStorage": {},
-									"StagingExport": {},
-									"StagingImport": {}
+									"StagingProduct": {}
 								}
 							},
 							"staging": {},
@@ -276,11 +268,11 @@
 						}
 					},
 					{
-						"name": "Extract Data_copy1",
+						"name": "Extract Data_Level2",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [
 							{
-								"activity": "Extract Data",
+								"activity": "Extract Data_Level1",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -296,24 +288,17 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "Extract_Raw_To_Staging",
+								"referenceName": "Extract_Raw_To_Staging_level2",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
 									"RawCustomer": {},
 									"RawWarehouse": {},
 									"RawSupplier": {},
-									"RawProduct": {},
-									"RawExport": {},
-									"RawImport": {},
-									"StagingCustomer": {},
 									"StagingLocation": {},
+									"StagingCustomer": {},
 									"StagingWarehouse": {},
-									"StagingProduct": {},
-									"StagingSupplier": {},
-									"StagingStorage": {},
-									"StagingExport": {},
-									"StagingImport": {}
+									"StagingSupplier": {}
 								}
 							},
 							"staging": {},
@@ -326,11 +311,11 @@
 						}
 					},
 					{
-						"name": "Extract Data_copy1_copy1",
+						"name": "Extract Data_Level3",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [
 							{
-								"activity": "Extract Data_copy1",
+								"activity": "Extract Data_Level2",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -346,20 +331,16 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "Extract_Raw_To_Staging",
+								"referenceName": "Extract_Raw_To_Staging_level3",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
-									"RawCustomer": {},
-									"RawWarehouse": {},
-									"RawSupplier": {},
 									"RawProduct": {},
 									"RawExport": {},
 									"RawImport": {},
-									"StagingCustomer": {},
-									"StagingLocation": {},
 									"StagingWarehouse": {},
 									"StagingProduct": {},
+									"StagingCustomer": {},
 									"StagingSupplier": {},
 									"StagingStorage": {},
 									"StagingExport": {},
@@ -387,8 +368,10 @@
 				"[concat(variables('factoryId'), '/dataflows/Populate_DWH_level1')]",
 				"[concat(variables('factoryId'), '/dataflows/Populate_DimTable')]",
 				"[concat(variables('factoryId'), '/dataflows/Populate_FactTable')]",
-				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging')]",
-				"[concat(variables('factoryId'), '/dataflows/Populate_DWH_level2')]"
+				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level1')]",
+				"[concat(variables('factoryId'), '/dataflows/Populate_DWH_level2')]",
+				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level2')]",
+				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level3')]"
 			]
 		},
 		{
