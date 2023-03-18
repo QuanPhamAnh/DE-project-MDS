@@ -338,7 +338,7 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> RawImport",
 				"RawCustomer cast(output(",
-				"          birthdate as timestamp,",
+				"          birthdate as date,",
 				"          Lat as double,",
 				"          Long as double",
 				"     ),",
