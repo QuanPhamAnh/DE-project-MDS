@@ -448,7 +448,6 @@
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          ProductKey,",
 				"          Product_ID,",
 				"          Product_Name,",
 				"          Product_Category,",
