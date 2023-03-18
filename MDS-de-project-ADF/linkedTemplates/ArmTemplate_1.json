@@ -4570,357 +4570,409 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/MDS-de-project-DataPipeline')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
+			"name": "[concat(parameters('factoryName'), '/Populate_DWH_level3')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"activities": [
-					{
-						"name": "Populate DWH_Level1",
-						"description": "",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "Extract Data_Level3",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 1,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Staging_Storage",
+								"type": "DatasetReference"
+							},
+							"name": "StagingStorage"
 						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "Populate_DWH_level1",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"StagingLocation": {},
-									"StagingProduct": {},
-									"DWHLocation1": {},
-									"DWHProduct": {}
-								}
+						{
+							"dataset": {
+								"referenceName": "Staging_Import",
+								"type": "DatasetReference"
 							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "integrationRuntime",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine",
-							"runConcurrently": true
-						}
-					},
-					{
-						"name": "Populate DimTable",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "Populate DWH_Level3",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 1,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
+							"name": "StagingImport"
 						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "Populate_DimTable",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"StagingLocation": {},
-									"DWHLocation": {},
-									"StagingWarehouse": {},
-									"DWHWarehouse": {},
-									"StagingProduct": {},
-									"DWHProduct": {},
-									"ExistingDimProduct": {},
-									"DimLocation": {},
-									"DimWarehouse": {},
-									"DimProduct": {}
-								}
+						{
+							"dataset": {
+								"referenceName": "Staging_Export",
+								"type": "DatasetReference"
 							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "integrationRuntime",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine",
-							"runConcurrently": true
-						}
-					},
-					{
-						"name": "Populate FactTable",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "Populate DimTable",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 1,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
+							"name": "StagingExport"
 						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "Populate_FactTable",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"DimLocation": {},
-									"DimWarehouse": {},
-									"DimProduct": {},
-									"DWHSupplier": {},
-									"DWHWarehouse": {},
-									"StagingImport": {},
-									"DWHImport": {},
-									"StagingExport": {},
-									"DWHExport": {},
-									"DWHStorage": {},
-									"DWHCustomer": {},
-									"FactImport": {},
-									"FactExport": {}
-								}
+						{
+							"dataset": {
+								"referenceName": "DWH_Warehouse",
+								"type": "DatasetReference"
 							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "integrationRuntime",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine",
-							"runConcurrently": true
-						}
-					},
-					{
-						"name": "Extract Data_Level1",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 1,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
+							"name": "DWHWarehouse"
 						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "Extract_Raw_To_Staging_level1",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"RawCustomer": {},
-									"RawWarehouse": {},
-									"RawSupplier": {},
-									"RawProduct": {},
-									"StagingLocation": {},
-									"StagingProduct": {}
-								}
+						{
+							"dataset": {
+								"referenceName": "DWH_Product",
+								"type": "DatasetReference"
 							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "integrationRuntime",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine",
-							"runConcurrently": true
-						}
-					},
-					{
-						"name": "Populate DWH_Level2",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "Populate DWH_Level1",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 1,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
+							"name": "DWHProduct"
 						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "Populate_DWH_level2",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"StagingCustomer": {},
-									"StagingSupplier": {},
-									"DWHLocation": {},
-									"StagingWarehouse": {},
-									"DWHCustomer": {},
-									"DWHSupplier": {},
-									"DWHWarehouse": {}
-								}
+						{
+							"dataset": {
+								"referenceName": "DWH_Supplier",
+								"type": "DatasetReference"
 							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "integrationRuntime",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine"
-						}
-					},
-					{
-						"name": "Populate DWH_Level3",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "Populate DWH_Level2",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 1,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
+							"name": "DWHSupplier"
 						},
-						"userProperties": [],
-						"typeProperties": {
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "integrationRuntime",
-								"type": "IntegrationRuntimeReference"
+						{
+							"dataset": {
+								"referenceName": "DWH_Customer",
+								"type": "DatasetReference"
 							},
-							"traceLevel": "Fine"
+							"name": "DWHCustomer"
 						}
-					},
-					{
-						"name": "Extract Data_Level2",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "Extract Data_Level1",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 1,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DWH_Storage",
+								"type": "DatasetReference"
+							},
+							"name": "DWHStorage"
 						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "Extract_Raw_To_Staging_level2",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"RawCustomer": {},
-									"RawWarehouse": {},
-									"RawSupplier": {},
-									"StagingLocation": {},
-									"StagingCustomer": {},
-									"StagingWarehouse": {},
-									"StagingSupplier": {}
-								}
+						{
+							"dataset": {
+								"referenceName": "DWH_Import",
+								"type": "DatasetReference"
 							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "integrationRuntime",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine",
-							"runConcurrently": true
-						}
-					},
-					{
-						"name": "Extract Data_Level3",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "Extract Data_Level2",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 1,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
+							"name": "DWHImport"
 						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "Extract_Raw_To_Staging_level3",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"RawProduct": {},
-									"RawExport": {},
-									"RawImport": {},
-									"StagingWarehouse": {},
-									"StagingProduct": {},
-									"StagingCustomer": {},
-									"StagingSupplier": {},
-									"StagingStorage": {},
-									"StagingExport": {},
-									"StagingImport": {}
-								}
+						{
+							"dataset": {
+								"referenceName": "DWH_Export",
+								"type": "DatasetReference"
 							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "integrationRuntime",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine",
-							"runConcurrently": true
+							"name": "DWHExport"
 						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-03-17T08:04:05Z"
+					],
+					"transformations": [
+						{
+							"name": "AlterStorage"
+						},
+						{
+							"name": "JoinStoreWH"
+						},
+						{
+							"name": "SelectWarehouse"
+						},
+						{
+							"name": "SelectProduct"
+						},
+						{
+							"name": "JoinStoreProd"
+						},
+						{
+							"name": "SelectSupplier"
+						},
+						{
+							"name": "JoinImportWH"
+						},
+						{
+							"name": "JoinImportProd"
+						},
+						{
+							"name": "JoinImportSupplier"
+						},
+						{
+							"name": "JoinExportProd"
+						},
+						{
+							"name": "SelectCustomer"
+						},
+						{
+							"name": "JoinExportCustomer"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          StorageID as integer,",
+						"          Product_ID as integer,",
+						"          Warehouse_ID as integer,",
+						"          Capacity as integer,",
+						"          Quantity as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingStorage",
+						"source(output(",
+						"          Import_ID as integer,",
+						"          Product_ID as integer,",
+						"          Warehouse_ID as integer,",
+						"          Supplier_ID as integer,",
+						"          Quantity as integer,",
+						"          Ship_Distance as double,",
+						"          Ship_Cost as double,",
+						"          Import_Date as date,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingImport",
+						"source(output(",
+						"          Order_ID as integer,",
+						"          Product_ID as integer,",
+						"          Customer_ID as integer,",
+						"          Quantity as integer,",
+						"          Date_Order as date,",
+						"          Date_Ship as date,",
+						"          Date_due as date,",
+						"          Ship_Distance as double,",
+						"          Ship_Cost as double,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> StagingExport",
+						"source(output(",
+						"          Warehouse_ID as integer,",
+						"          Source_Warehouse_ID as integer,",
+						"          Warehouse_Name as string,",
+						"          Warehouse_cost as double,",
+						"          Location_ID as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DWHWarehouse",
+						"source(output(",
+						"          Product_ID as integer,",
+						"          Source_Product_ID as integer,",
+						"          Product_Name as string,",
+						"          Product_Category as string,",
+						"          Product_Code as integer,",
+						"          Weight as double,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DWHProduct",
+						"source(output(",
+						"          Supplier_ID as integer,",
+						"          Source_Supplier_ID as integer,",
+						"          Supplier_Name as string,",
+						"          Location_ID as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DWHSupplier",
+						"source(output(",
+						"          Customer_ID as integer,",
+						"          Source_Customer_ID as integer,",
+						"          Name as string,",
+						"          Username as string,",
+						"          Sex as string,",
+						"          Mail as string,",
+						"          Birthdate as timestamp,",
+						"          Location_ID as integer,",
+						"          Phone as string,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DWHCustomer",
+						"JoinStoreProd alterRow(upsertIf(true())) ~> AlterStorage",
+						"StagingStorage, SelectWarehouse join(StagingStorage@Warehouse_ID == Source_Warehouse_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinStoreWH",
+						"DWHWarehouse select(mapColumn(",
+						"          Warehouse_ID,",
+						"          Source_Warehouse_ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectWarehouse",
+						"DWHProduct select(mapColumn(",
+						"          Product_ID,",
+						"          Source_Product_ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectProduct",
+						"JoinStoreWH, SelectProduct join(StagingStorage@Product_ID == Source_Product_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinStoreProd",
+						"DWHSupplier select(mapColumn(",
+						"          Supplier_ID,",
+						"          Source_Supplier_ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectSupplier",
+						"StagingImport, SelectWarehouse join(StagingImport@Warehouse_ID == Source_Warehouse_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinImportWH",
+						"JoinImportWH, SelectProduct join(StagingImport@Product_ID == Source_Product_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinImportProd",
+						"JoinImportProd, SelectSupplier join(StagingImport@Supplier_ID == Source_Supplier_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinImportSupplier",
+						"StagingExport, SelectProduct join(StagingExport@Product_ID == Source_Product_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinExportProd",
+						"DWHCustomer select(mapColumn(",
+						"          Customer_ID,",
+						"          Source_Customer_ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectCustomer",
+						"JoinExportProd, SelectCustomer join(StagingExport@Customer_ID == Source_Customer_ID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinExportCustomer",
+						"AlterStorage sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          StorageID as integer,",
+						"          Source_StorageID as integer,",
+						"          Product_ID as integer,",
+						"          Warehouse_ID as integer,",
+						"          Capacity as integer,",
+						"          Quantity as integer,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['Source_StorageID'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Source_StorageID = StorageID,",
+						"          Product_ID = SelectProduct@Product_ID,",
+						"          Warehouse_ID = SelectWarehouse@Warehouse_ID,",
+						"          Capacity,",
+						"          Quantity,",
+						"          uuid,",
+						"          LastEditedBy,",
+						"          LastEditedWhen",
+						"     )) ~> DWHStorage",
+						"JoinImportSupplier sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ImportID as integer,",
+						"          Source_Import_ID as integer,",
+						"          Product_ID as integer,",
+						"          Warehouse_ID as integer,",
+						"          Supplier_ID as integer,",
+						"          Quantity as integer,",
+						"          Ship_Distance as double,",
+						"          Ship_Cost as double,",
+						"          Import_Date as date,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Source_Import_ID = Import_ID,",
+						"          Product_ID = SelectProduct@Product_ID,",
+						"          Warehouse_ID = SelectWarehouse@Warehouse_ID,",
+						"          Supplier_ID = SelectSupplier@Supplier_ID,",
+						"          Quantity,",
+						"          Ship_Distance,",
+						"          Ship_Cost,",
+						"          Import_Date,",
+						"          uuid,",
+						"          LastEditedBy,",
+						"          LastEditedWhen",
+						"     )) ~> DWHImport",
+						"JoinExportCustomer sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Order_ID as integer,",
+						"          Source_Order_ID as integer,",
+						"          Product_ID as integer,",
+						"          Customer_ID as integer,",
+						"          Quantity as integer,",
+						"          Date_Order as date,",
+						"          Date_Ship as date,",
+						"          Date_due as date,",
+						"          Ship_Distance as double,",
+						"          Ship_Cost as double,",
+						"          uuid as string,",
+						"          LastEditedBy as string,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Source_Order_ID = Order_ID,",
+						"          Product_ID = SelectProduct@Product_ID,",
+						"          Customer_ID = SelectCustomer@Customer_ID,",
+						"          Quantity,",
+						"          Date_Order,",
+						"          Date_Ship,",
+						"          Date_due,",
+						"          Ship_Distance,",
+						"          Ship_Cost,",
+						"          uuid,",
+						"          LastEditedBy,",
+						"          LastEditedWhen",
+						"     )) ~> DWHExport"
+					]
+				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/Populate_DWH_level1')]",
-				"[concat(variables('factoryId'), '/dataflows/Populate_DimTable')]",
-				"[concat(variables('factoryId'), '/dataflows/Populate_FactTable')]",
-				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level1')]",
-				"[concat(variables('factoryId'), '/dataflows/Populate_DWH_level2')]",
-				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level2')]",
-				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level3')]"
+				"[concat(variables('factoryId'), '/datasets/Staging_Storage')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Import')]",
+				"[concat(variables('factoryId'), '/datasets/Staging_Export')]"
 			]
 		}
 	]
