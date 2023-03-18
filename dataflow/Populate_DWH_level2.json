@@ -1,0 +1,269 @@
+{
+	"name": "Populate_DWH_level2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Staging_Customer",
+						"type": "DatasetReference"
+					},
+					"name": "StagingCustomer"
+				},
+				{
+					"dataset": {
+						"referenceName": "Staging_Supplier",
+						"type": "DatasetReference"
+					},
+					"name": "StagingSupplier"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Location",
+						"type": "DatasetReference"
+					},
+					"name": "DWHLocation"
+				},
+				{
+					"dataset": {
+						"referenceName": "Staging_Warehouse",
+						"type": "DatasetReference"
+					},
+					"name": "StagingWarehouse"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DWH_Customer",
+						"type": "DatasetReference"
+					},
+					"name": "DWHCustomer"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Supplier",
+						"type": "DatasetReference"
+					},
+					"name": "DWHSupplier"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_Warehouse",
+						"type": "DatasetReference"
+					},
+					"name": "DWHWarehouse"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AlterCustomer",
+					"description": "Enable Upsert"
+				},
+				{
+					"name": "AlterSupplier",
+					"description": "Enable Upsert"
+				},
+				{
+					"name": "SelectLocation"
+				},
+				{
+					"name": "JoinCustLocation"
+				},
+				{
+					"name": "JoinSupLocation"
+				},
+				{
+					"name": "JoinWHLocation"
+				},
+				{
+					"name": "AlterWH",
+					"description": "Enable Upsert"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Customer_ID as integer,",
+				"          name as string,",
+				"          username as string,",
+				"          sex as string,",
+				"          mail as string,",
+				"          birthdate as timestamp,",
+				"          Location_ID as integer,",
+				"          Phone as string,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StagingCustomer",
+				"source(output(",
+				"          Supplier_ID as integer,",
+				"          Supplier_Name as string,",
+				"          Location_ID as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StagingSupplier",
+				"source(output(",
+				"          Location_ID as integer,",
+				"          Source_Location_ID as integer,",
+				"          Address as string,",
+				"          Lat as double,",
+				"          Long as double,",
+				"          City as string,",
+				"          Country_code as string,",
+				"          Country_name as string,",
+				"          States as string,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DWHLocation",
+				"source(output(",
+				"          Warehouse_ID as integer,",
+				"          Warehouse_Name as string,",
+				"          Warehouse_cost as double,",
+				"          Location_ID as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> StagingWarehouse",
+				"JoinCustLocation alterRow(upsertIf(true())) ~> AlterCustomer",
+				"JoinSupLocation alterRow(upsertIf(true())) ~> AlterSupplier",
+				"DWHLocation select(mapColumn(",
+				"          Location_ID,",
+				"          Source_Location_ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectLocation",
+				"StagingCustomer, SelectLocation join(StagingCustomer@Location_ID == Source_Location_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinCustLocation",
+				"StagingSupplier, SelectLocation join(StagingSupplier@Location_ID == Source_Location_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinSupLocation",
+				"StagingWarehouse, SelectLocation join(StagingWarehouse@Location_ID == Source_Location_ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinWHLocation",
+				"JoinWHLocation alterRow(upsertIf(true())) ~> AlterWH",
+				"AlterCustomer sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Customer_ID as integer,",
+				"          Source_Customer_ID as integer,",
+				"          Name as string,",
+				"          Username as string,",
+				"          Sex as string,",
+				"          Mail as string,",
+				"          Birthdate as timestamp,",
+				"          Location_ID as integer,",
+				"          Phone as string,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['Username'],",
+				"     format: 'table',",
+				"     dateFormat:'dd/MM/yyyy',",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     outputAssertFailedRows: true,",
+				"     mapColumn(",
+				"          Source_Customer_ID = Customer_ID,",
+				"          Name = name,",
+				"          Username = username,",
+				"          Sex = sex,",
+				"          Mail = mail,",
+				"          Birthdate = birthdate,",
+				"          Location_ID = SelectLocation@Location_ID,",
+				"          Phone,",
+				"          uuid,",
+				"          LastEditedBy,",
+				"          LastEditedWhen",
+				"     )) ~> DWHCustomer",
+				"AlterSupplier sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Supplier_ID as integer,",
+				"          Source_Supplier_ID as integer,",
+				"          Supplier_Name as string,",
+				"          Location_ID as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['Supplier_Name'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Source_Supplier_ID = Supplier_ID,",
+				"          Supplier_Name,",
+				"          Location_ID = SelectLocation@Location_ID,",
+				"          uuid,",
+				"          LastEditedBy,",
+				"          LastEditedWhen",
+				"     )) ~> DWHSupplier",
+				"AlterWH sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Warehouse_ID as integer,",
+				"          Source_Warehouse_ID as integer,",
+				"          Warehouse_Name as string,",
+				"          Warehouse_cost as double,",
+				"          Location_ID as integer,",
+				"          uuid as string,",
+				"          LastEditedBy as string,",
+				"          LastEditedWhen as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['Warehouse_Name'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Source_Warehouse_ID = Warehouse_ID,",
+				"          Warehouse_Name,",
+				"          Warehouse_cost,",
+				"          Location_ID = SelectLocation@Location_ID,",
+				"          uuid,",
+				"          LastEditedBy,",
+				"          LastEditedWhen",
+				"     )) ~> DWHWarehouse"
+			]
+		}
+	}
+}
