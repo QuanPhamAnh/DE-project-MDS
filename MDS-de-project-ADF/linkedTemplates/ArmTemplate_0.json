@@ -1129,311 +1129,319 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Staging_Customer')]",
+			"name": "[concat(parameters('factoryName'), '/RawCustomer')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "AzureDB",
+					"referenceName": "AzureBlobStorage",
 					"type": "LinkedServiceReference"
 				},
 				"folder": {
-					"name": "Staging"
+					"name": "RawData"
 				},
 				"annotations": [],
-				"type": "AzureSqlTable",
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "customer_df.csv",
+						"container": "mds-de-project-blobs"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
 				"schema": [
 					{
 						"name": "Customer_ID",
-						"type": "int",
-						"precision": 10
+						"type": "String"
 					},
 					{
-						"name": "name",
-						"type": "varchar"
+						"name": "job",
+						"type": "String"
+					},
+					{
+						"name": "company",
+						"type": "String"
+					},
+					{
+						"name": "ssn",
+						"type": "String"
+					},
+					{
+						"name": "residence",
+						"type": "String"
+					},
+					{
+						"name": "website",
+						"type": "String"
 					},
 					{
 						"name": "username",
-						"type": "varchar"
+						"type": "String"
+					},
+					{
+						"name": "name",
+						"type": "String"
 					},
 					{
 						"name": "sex",
-						"type": "varchar"
+						"type": "String"
 					},
 					{
 						"name": "mail",
-						"type": "varchar"
+						"type": "String"
 					},
 					{
 						"name": "birthdate",
-						"type": "datetime",
-						"precision": 23,
-						"scale": 3
-					},
-					{
-						"name": "Location_ID",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Phone",
-						"type": "varchar"
-					},
-					{
-						"name": "uuid",
-						"type": "uniqueidentifier"
-					},
-					{
-						"name": "LastEditedBy",
-						"type": "nvarchar"
-					},
-					{
-						"name": "LastEditedWhen",
-						"type": "datetime",
-						"precision": 23,
-						"scale": 3
-					}
-				],
-				"typeProperties": {
-					"schema": "Staging",
-					"table": "Customer"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Staging_Export')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureDB",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Staging"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "Order_ID",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Product_ID",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Customer_ID",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Quantity",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Date_Order",
-						"type": "date"
-					},
-					{
-						"name": "Date_Ship",
-						"type": "date"
-					},
-					{
-						"name": "Date_due",
-						"type": "date"
-					},
-					{
-						"name": "Ship_Distance",
-						"type": "float",
-						"precision": 15
-					},
-					{
-						"name": "Ship_Cost",
-						"type": "float",
-						"precision": 15
-					},
-					{
-						"name": "uuid",
-						"type": "uniqueidentifier"
-					},
-					{
-						"name": "LastEditedBy",
-						"type": "nvarchar"
-					},
-					{
-						"name": "LastEditedWhen",
-						"type": "datetime",
-						"precision": 23,
-						"scale": 3
-					}
-				],
-				"typeProperties": {
-					"schema": "Staging",
-					"table": "Export"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Staging_Import')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureDB",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Staging"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "Import_ID",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Product_ID",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Warehouse_ID",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Supplier_ID",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Quantity",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Ship_Distance",
-						"type": "float",
-						"precision": 15
-					},
-					{
-						"name": "Ship_Cost",
-						"type": "float",
-						"precision": 15
-					},
-					{
-						"name": "Import_Date",
-						"type": "date"
-					},
-					{
-						"name": "uuid",
-						"type": "uniqueidentifier"
-					},
-					{
-						"name": "LastEditedBy",
-						"type": "nvarchar"
-					},
-					{
-						"name": "LastEditedWhen",
-						"type": "datetime",
-						"precision": 23,
-						"scale": 3
-					}
-				],
-				"typeProperties": {
-					"schema": "Staging",
-					"table": "Import"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Staging_Location')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureDB",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Staging"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "Location_ID",
-						"type": "int",
-						"precision": 10
+						"type": "String"
 					},
 					{
 						"name": "Address",
-						"type": "varchar"
+						"type": "String"
 					},
 					{
 						"name": "Lat",
-						"type": "float",
-						"precision": 15
+						"type": "String"
 					},
 					{
 						"name": "Long",
-						"type": "float",
-						"precision": 15
+						"type": "String"
+					},
+					{
+						"name": "Post_Code",
+						"type": "String"
 					},
 					{
 						"name": "City",
-						"type": "varchar"
+						"type": "String"
 					},
 					{
 						"name": "Country_code",
-						"type": "varchar"
+						"type": "String"
 					},
 					{
 						"name": "Country_name",
-						"type": "varchar"
+						"type": "String"
 					},
 					{
 						"name": "States",
-						"type": "varchar"
-					},
-					{
-						"name": "uuid",
-						"type": "uniqueidentifier"
-					},
-					{
-						"name": "LastEditedBy",
-						"type": "nvarchar"
-					},
-					{
-						"name": "LastEditedWhen",
-						"type": "datetime",
-						"precision": 23,
-						"scale": 3
+						"type": "String"
 					}
-				],
-				"typeProperties": {
-					"schema": "Staging",
-					"table": "Location"
-				}
+				]
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDB')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/RawExport')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "RawData"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "record_df.csv",
+						"container": "mds-de-project-blobs"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Order_ID",
+						"type": "String"
+					},
+					{
+						"name": "Quantity",
+						"type": "String"
+					},
+					{
+						"name": "Date_Order",
+						"type": "String"
+					},
+					{
+						"name": "Date_Ship",
+						"type": "String"
+					},
+					{
+						"name": "Date_due",
+						"type": "String"
+					},
+					{
+						"name": "Ship_Distance",
+						"type": "String"
+					},
+					{
+						"name": "Ship_Cost",
+						"type": "String"
+					},
+					{
+						"name": "Product_Code",
+						"type": "String"
+					},
+					{
+						"name": "username",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/RawImport')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "RawData"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "import_df.csv",
+						"container": "mds-de-project-blobs"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Import_ID",
+						"type": "String"
+					},
+					{
+						"name": "Quantity",
+						"type": "String"
+					},
+					{
+						"name": "Ship_Distance",
+						"type": "String"
+					},
+					{
+						"name": "Ship_Cost",
+						"type": "String"
+					},
+					{
+						"name": "ImportDate",
+						"type": "String"
+					},
+					{
+						"name": "Product_Code",
+						"type": "String"
+					},
+					{
+						"name": "Warehouse_Name",
+						"type": "String"
+					},
+					{
+						"name": "SupplierName",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/RawProduct')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "RawData"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "product_df.csv",
+						"container": "mds-de-project-blobs"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "NoID",
+						"type": "String"
+					},
+					{
+						"name": "Product_Code",
+						"type": "String"
+					},
+					{
+						"name": "Product_Name",
+						"type": "String"
+					},
+					{
+						"name": "Weight",
+						"type": "String"
+					},
+					{
+						"name": "Product_SubCategory",
+						"type": "String"
+					},
+					{
+						"name": "Product_Color",
+						"type": "String"
+					},
+					{
+						"name": "Standard_Cost",
+						"type": "String"
+					},
+					{
+						"name": "General_Price",
+						"type": "String"
+					},
+					{
+						"name": "Product_Number",
+						"type": "String"
+					},
+					{
+						"name": "Import_Flag",
+						"type": "String"
+					},
+					{
+						"name": "Warehouse_Name",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage')]"
 			]
 		}
 	]
