@@ -13,6 +13,80 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/RawProduct')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "RawData"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "product_df.csv",
+						"container": "mds-de-project-blobs"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "NoID",
+						"type": "String"
+					},
+					{
+						"name": "Product_Code",
+						"type": "String"
+					},
+					{
+						"name": "Product_Name",
+						"type": "String"
+					},
+					{
+						"name": "Weight",
+						"type": "String"
+					},
+					{
+						"name": "Product_SubCategory",
+						"type": "String"
+					},
+					{
+						"name": "Product_Color",
+						"type": "String"
+					},
+					{
+						"name": "Standard_Cost",
+						"type": "String"
+					},
+					{
+						"name": "General_Price",
+						"type": "String"
+					},
+					{
+						"name": "Product_Number",
+						"type": "String"
+					},
+					{
+						"name": "Import_Flag",
+						"type": "String"
+					},
+					{
+						"name": "Warehouse_Name",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/RawSupplier')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1634,6 +1708,7 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/RawWarehouse')]",
 				"[concat(variables('factoryId'), '/datasets/RawSupplier')]",
+				"[concat(variables('factoryId'), '/datasets/RawProduct')]",
 				"[concat(variables('factoryId'), '/datasets/Staging_Customer')]",
 				"[concat(variables('factoryId'), '/datasets/Staging_Location')]",
 				"[concat(variables('factoryId'), '/datasets/Staging_Warehouse')]",
@@ -1982,6 +2057,7 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/RawWarehouse')]",
 				"[concat(variables('factoryId'), '/datasets/RawSupplier')]",
+				"[concat(variables('factoryId'), '/datasets/RawProduct')]",
 				"[concat(variables('factoryId'), '/datasets/Staging_Location')]",
 				"[concat(variables('factoryId'), '/datasets/Staging_Product')]"
 			]
@@ -2936,6 +3012,7 @@
 				}
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/RawProduct')]",
 				"[concat(variables('factoryId'), '/datasets/Staging_Warehouse')]",
 				"[concat(variables('factoryId'), '/datasets/Staging_Product')]",
 				"[concat(variables('factoryId'), '/datasets/Staging_Customer')]",
@@ -4531,9 +4608,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "integrationRuntime",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine",
 							"runConcurrently": true
@@ -4546,7 +4623,7 @@
 							{
 								"activity": "Populate DWH_Level3",
 								"dependencyConditions": [
-									"Completed"
+									"Succeeded"
 								]
 							}
 						],
@@ -4577,9 +4654,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "integrationRuntime",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine",
 							"runConcurrently": true
@@ -4626,9 +4703,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "integrationRuntime",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine",
 							"runConcurrently": true
@@ -4661,9 +4738,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "integrationRuntime",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine",
 							"runConcurrently": true
@@ -4704,9 +4781,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "integrationRuntime",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -4732,9 +4809,9 @@
 						"userProperties": [],
 						"typeProperties": {
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "integrationRuntime",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -4774,9 +4851,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "integrationRuntime",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine",
 							"runConcurrently": true
@@ -4820,9 +4897,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "integrationRuntime",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine",
 							"runConcurrently": true
@@ -4844,36 +4921,6 @@
 				"[concat(variables('factoryId'), '/dataflows/Populate_DWH_level2')]",
 				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level2')]",
 				"[concat(variables('factoryId'), '/dataflows/Extract_Raw_To_Staging_level3')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DailyBuild')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "MDS-de-project-DataPipeline",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Hour",
-						"interval": 24,
-						"startTime": "2023-03-18T00:00:00",
-						"timeZone": "SE Asia Standard Time"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/MDS-de-project-DataPipeline')]"
 			]
 		}
 	]
